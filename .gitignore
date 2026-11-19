@@ -1,0 +1,18 @@
+# Dependencies and build output (each app also has its own .gitignore)
+node_modules/
+dist/
+.next/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Uploaded images (back these up separately)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Local tooling output
+.playwright-mcp/
+*.log
+.DS_Store

@@ -1,0 +1,10 @@
+-- AlterTable
+ALTER TABLE `team_members` ADD COLUMN `education` VARCHAR(1000) NOT NULL DEFAULT '',
+    ADD COLUMN `facebook_url` VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN `instagram_url` VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN `joined_year` INTEGER NULL,
+    ADD COLUMN `languages` VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN `linkedin_url` VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN `twitter_url` VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN `whatsapp` VARCHAR(60) NOT NULL DEFAULT '';
+

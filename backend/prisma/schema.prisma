@@ -1,0 +1,181 @@
+// TEXT columns cannot have a plain DEFAULT in MySQL; they use an expression default instead: @default(dbgenerated("('')"))
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(120)
+  email        String   @unique @db.VarChar(190)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model News {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(200)
+  slug        String    @unique @db.VarChar(220)
+  excerpt     String    @default("") @db.VarChar(500)
+  content     String    @db.LongText
+  coverImage  String?   @map("cover_image") @db.VarChar(255)
+  isPublished Boolean   @default(false) @map("is_published")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  comments    NewsComment[]
+
+  @@index([isPublished, publishedAt])
+  @@map("news")
+}
+
+/// A reader's comment on a news story. Shown on the site only after staff approve it.
+model NewsComment {
+  id         Int      @id @default(autoincrement())
+  newsId     Int      @map("news_id")
+  news       News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  name       String   @db.VarChar(120)
+  message    String   @db.Text
+  isApproved Boolean  @default(false) @map("is_approved")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([newsId, isApproved])
+  @@map("news_comments")
+}
+
+enum ProjectStatus {
+  planned
+  ongoing
+  completed
+}
+
+model Project {
+  id          Int           @id @default(autoincrement())
+  title       String        @db.VarChar(200)
+  slug        String        @unique @db.VarChar(220)
+  summary     String        @default("") @db.VarChar(500)
+  content     String        @db.LongText
+  coverImage  String?       @map("cover_image") @db.VarChar(255)
+  location    String        @default("") @db.VarChar(200)
+  status      ProjectStatus @default(ongoing)
+  sortOrder   Int           @default(0) @map("sort_order")
+  isPublished Boolean       @default(false) @map("is_published")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@map("projects")
+}
+
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(120)
+  slug      String?  @unique @db.VarChar(140)
+  role      String   @db.VarChar(120)
+  bio       String   @default(dbgenerated("('')")) @db.Text
+  email     String   @default("") @db.VarChar(190)
+  phone     String   @default("") @db.VarChar(60)
+  address   String   @default("") @db.VarChar(255)
+  expertise String   @default("") @db.VarChar(500)
+  /// Profile extras shown on the member's own page.
+  languages    String  @default("") @db.VarChar(255)
+  education    String  @default("") @db.VarChar(1000)
+  joinedYear   Int?    @map("joined_year")
+  facebookUrl  String  @default("") @map("facebook_url") @db.VarChar(255)
+  twitterUrl   String  @default("") @map("twitter_url") @db.VarChar(255)
+  linkedinUrl  String  @default("") @map("linkedin_url") @db.VarChar(255)
+  instagramUrl String  @default("") @map("instagram_url") @db.VarChar(255)
+  whatsapp     String  @default("") @db.VarChar(60)
+  photo     String?  @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("team_members")
+}
+
+model Partner {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(160)
+  logo        String?  @db.VarChar(255)
+  websiteUrl  String   @default("") @map("website_url") @db.VarChar(255)
+  description String   @default(dbgenerated("('')")) @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("partners")
+}
+
+/// Single-row table (id is always 1) holding editable site-wide information.
+model SiteInfo {
+  id           Int      @id @default(1)
+  programName  String   @default("Hydraulic Program") @map("program_name") @db.VarChar(160)
+  tagline      String   @default("") @db.VarChar(255)
+  heroText     String   @default(dbgenerated("('')")) @map("hero_text") @db.Text
+  mission      String   @default(dbgenerated("('')")) @db.Text
+  vision       String   @default(dbgenerated("('')")) @db.Text
+  aboutText    String   @default(dbgenerated("('')")) @map("about_text") @db.LongText
+  contactEmail String   @default("") @map("contact_email") @db.VarChar(190)
+  phone        String   @default("") @db.VarChar(60)
+  address      String   @default("") @db.VarChar(255)
+  facebookUrl  String   @default("") @map("facebook_url") @db.VarChar(255)
+  twitterUrl   String   @default("") @map("twitter_url") @db.VarChar(255)
+  linkedinUrl  String   @default("") @map("linkedin_url") @db.VarChar(255)
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("site_info")
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(120)
+  email     String   @db.VarChar(190)
+  subject   String   @default("") @db.VarChar(200)
+  message   String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("contact_messages")
+}
+
+/// A service the program provides (its pillars). Shown on Home ("Our services") and in full on About.
+model Service {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(120)
+  slug      String   @unique @db.VarChar(140)
+  /// One or two sentences for the Home columns.
+  summary   String   @default("") @db.VarChar(500)
+  /// What the service includes: one item per line.
+  includes  String   @default(dbgenerated("('')")) @db.Text
+  /// The full explanation on the About page: paragraphs separated by a blank line.
+  details   String   @default(dbgenerated("('')")) @db.Text
+  photo     String?  @db.VarChar(255)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("services")
+}
+
+/// One page view on the public site, for the dashboard's Statistics page. No IP address or
+/// other personal data is stored: `visitor` is a one-way code made from the visitor's IP and
+/// browser together with the day and a server secret, so it changes every day and cannot be
+/// traced back. It only lets us count distinct visitors per day.
+model PageView {
+  id        Int      @id @default(autoincrement())
+  /// The day in Rwanda time (Africa/Kigali), as YYYY-MM-DD.
+  day       String   @db.Char(10)
+  path      String   @db.VarChar(255)
+  visitor   String   @db.Char(64)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([day])
+  @@index([day, visitor])
+  @@map("page_views")
+}

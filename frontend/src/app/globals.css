@@ -1,0 +1,528 @@
+@import "tailwindcss";
+
+/*
+  Design: layout modelled on alueducation.com, in water colours.
+  navy: header, footer, panels (deep water). accent: buttons, links, rules (ocean blue).
+  band / band-2: the big band and the quarter circle. deep: big letter, number circle.
+  mist: light section backgrounds. danger stays red for errors and deletes.
+  Fonts: Montserrat (body, nav, headings in cards), Bitter (section headings), Open Sans (long text).
+*/
+:root {
+  --navy: #002e6d;
+  --navy-deep: #001d47;
+  --navy-band: #172560;
+  --blue: #1b5ba8;
+  --sky: #9fbde3;
+  --accent: #0077b6;
+  --accent-dark: #005f8f;
+  --band: #0077b6;
+  --band-2: #0369a1;
+  --deep: #023e7d;
+  --ink: #333333;
+  --muted: #666666;
+  --grey: #8a8a8a;
+  --line: #d9d9d9;
+  --mist: #e6f2f7;
+  --paper: #ffffff;
+  --danger: #b4231f;
+}
+
+@theme inline {
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-navy-band: var(--navy-band);
+  --color-blue: var(--blue);
+  --color-sky: var(--sky);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --color-band: var(--band);
+  --color-band-2: var(--band-2);
+  --color-deep: var(--deep);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-grey: var(--grey);
+  --color-line: var(--line);
+  --color-mist: var(--mist);
+  --color-paper: var(--paper);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-text: var(--font-text);
+}
+
+html {
+  background: var(--paper);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.font-text {
+  font-family: var(--font-text), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  transition: background-color 0.15s ease;
+}
+.btn-primary:hover {
+  background: var(--accent-dark);
+}
+.btn-outline {
+  border: 1px solid #ffffff;
+  color: #ffffff;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.btn-outline:hover {
+  background: #ffffff;
+  color: var(--navy);
+}
+
+/* The big background letter in the red band */
+.bigletter {
+  position: absolute;
+  left: -96px;
+  top: -23px;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 250px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--deep);
+  opacity: 0.8;
+  pointer-events: none;
+  user-select: none;
+}
+@media (max-width: 760px) {
+  .bigletter {
+    left: -84px;
+    top: -14px;
+    font-size: 150px;
+  }
+}
+
+/* Image zoom on card hover */
+.zoom {
+  overflow: hidden;
+}
+.zoom img {
+  transition: transform 0.5s ease;
+}
+.zoom-host:hover .zoom img {
+  transform: scale(1.06);
+}
+
+/* Navy side menu (Partners) */
+.side-menu a {
+  display: block;
+  padding: 14px 25px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.18);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.side-menu a:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+/* Form fields */
+.field {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid #d6d6d6;
+  background: #ffffff;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+}
+.field:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  border-color: var(--accent);
+}
+
+/* Rich text written in the dashboard editor, in ALU's article style */
+.richtext {
+  font-family: var(--font-text), system-ui, sans-serif;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: #6f6f6f;
+}
+.richtext > * + * {
+  margin-top: 18px;
+}
+.richtext h2,
+.richtext h3 {
+  margin-top: 26px;
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.richtext a {
+  color: var(--accent);
+}
+.richtext a:hover {
+  text-decoration: underline;
+}
+.richtext ul {
+  list-style: disc;
+  padding-left: 1.4em;
+}
+.richtext ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.richtext blockquote {
+  color: var(--ink);
+  font-style: italic;
+}
+/* Photos in a story sit two per row; a third in a run spans the full width. */
+.richtext img {
+  display: inline-block;
+  width: calc(50% - 6px);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  vertical-align: top;
+  margin-top: 12px;
+}
+.richtext img + img {
+  margin-left: 12px;
+}
+.richtext img + img + img {
+  margin-left: 0;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+.richtext em {
+  font-size: 13px;
+  color: var(--grey);
+}
+
+/* ---------- Motion ---------- */
+
+/* Scroll reveal: content fades in once as it reaches the screen. A quiet fade only, with no
+   sliding, springing or staggering. Hidden only when JavaScript runs (html.js), so
+   content never stays invisible. */
+html.js [data-reveal] {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+html.js [data-reveal].is-visible {
+  opacity: 1;
+}
+
+/* Cards and chips no longer lift or sparkle on hover; the photo inside (.zoom) still
+   enlarges a little and titles change colour, in answer to the pointer. */
+.pop-card h3,
+.pop-card .font-display {
+  transition: color 0.2s ease;
+}
+
+/* Hero slideshow: each new slide glides in. */
+@keyframes hero-card-in {
+  from {
+    opacity: 0;
+    transform: translateX(-40px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-card-in {
+  animation: hero-card-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.hero-text-in {
+  animation: rise-in 0.8s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+/* Hero background photo cross-fades in with each slide. */
+@keyframes hero-bg-in {
+  from {
+    opacity: 0;
+    transform: scale(1.12);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+.hero-bg-in {
+  animation: hero-bg-in 1.4s ease-out both;
+  transform: scale(1.04);
+}
+/* Back-to-top: hidden until the visitor scrolls up, then a plain fade. */
+.top-button {
+  opacity: 0;
+  transform: translateY(16px) scale(0.7);
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.3s cubic-bezier(0.34, 1.45, 0.64, 1),
+    background-color 0.2s ease;
+}
+.top-button.is-shown {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* A photo that changes in answer to the visitor (Home "Our work" preview). */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fade-in 0.35s ease both;
+}
+/* Page banner titles rise in when a page opens. */
+.banner-in {
+  animation: rise-in 0.9s 0.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* The hero's dotted waves drift slowly, like water. */
+@keyframes water-drift {
+  0%,
+  100% {
+    transform: scale(1.06) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.1) translate(-1.5%, -1%);
+  }
+}
+.water-drift {
+  animation: water-drift 24s ease-in-out infinite;
+  transform-origin: 80% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .hero-card-in,
+  .hero-text-in,
+  .hero-bg-in,
+  .fade-in,
+  .banner-in,
+  .water-drift {
+    animation: none;
+  }
+  .pop-card h3,
+  .pop-card .font-display {
+    transition: none;
+  }
+  .pop-card:hover,
+  .pop-card:focus-visible,
+  .pop-chip:hover,
+  .pop-portrait:hover img {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zoom img,
+  .btn-primary,
+  .btn-outline {
+    transition: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .top-button {
+    transform: none;
+    transition: opacity 0.15s linear;
+  }
+}
+
+/* ---------- News story text: larger, easy-to-read lines and a drop cap ---------- */
+.story-text p {
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--ink);
+}
+.story-text > p:first-child::first-letter {
+  float: left;
+  margin: 6px 12px 0 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 66px;
+  line-height: 0.82;
+  color: var(--accent);
+}
+
+/* ---------- Copy protection on the public site (see NoCopy.tsx) ---------- */
+.no-copy {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.no-copy img {
+  -webkit-user-drag: none;
+}
+.no-copy input,
+.no-copy textarea,
+.no-copy select,
+.no-copy [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ---------- Profile arch (team member page): a drop of water falls onto the picture ---------- */
+.profile-drop {
+  opacity: 0;
+  transform: translate(-50%, -220px);
+  animation: profile-drop-fall 1.15s 0.35s cubic-bezier(0.55, 0, 0.9, 0.45) forwards;
+}
+@keyframes profile-drop-fall {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -220px) scale(0.7, 0.9);
+  }
+  12% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(0.9, 1.15);
+  }
+  86% {
+    opacity: 1;
+    transform: translate(-50%, 8px) scale(1.6, 0.45);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(2, 0.2);
+  }
+}
+/* rings spreading where the drop lands */
+.profile-ripple {
+  width: 120px;
+  height: 28px;
+  margin-left: -60px;
+  border: 2px solid #90e0ef;
+  border-radius: 50%;
+  opacity: 0;
+  transform: scale(0.1);
+  animation: profile-ripple 1s 1.3s ease-out forwards;
+}
+.profile-ripple-2 {
+  animation-delay: 1.5s;
+  border-color: rgba(255, 255, 255, 0.85);
+}
+@keyframes profile-ripple {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+/* two tiny droplets thrown out by the splash */
+.profile-splash {
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  background: #90e0ef;
+  opacity: 0;
+}
+.profile-splash-l {
+  animation: profile-splash-l 0.7s 1.3s ease-out forwards;
+}
+.profile-splash-r {
+  animation: profile-splash-r 0.7s 1.33s ease-out forwards;
+}
+@keyframes profile-splash-l {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-30px, -26px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-44px, -6px);
+  }
+}
+@keyframes profile-splash-r {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(28px, -30px);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(42px, -8px);
+  }
+}
+/* the arch gives a small bounce when the drop lands */
+.profile-arch-shape {
+  animation: profile-arch-land 0.6s 1.28s cubic-bezier(0.34, 1.6, 0.64, 1) both;
+  transform-origin: 50% 100%;
+}
+@keyframes profile-arch-land {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.03, 0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-drop,
+  .profile-ripple,
+  .profile-splash {
+    display: none;
+  }
+  .profile-arch-shape {
+    animation: none;
+  }
+}
