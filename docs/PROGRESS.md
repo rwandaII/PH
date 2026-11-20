@@ -374,3 +374,7 @@ Design prototype (canvas): https://claude.ai/artifact/2qEneXKDGJ48QzAt7GwTc9
   card (white logos via brightness-0 invert, one fades out before the next fades in). The partners text block has no
   glass card and no logos (just names + link). The logo strip (PartnerMarquee) shows bare logos, no cards; the `tone`
   prop is gone. Footer bar: "POWERED by COD RW" on the right, monospace, small, white/55.
+
+- 2026-11-20: "Youth capacity building" renamed to "Human capacity building" everywhere (project title, text and
+  address /projects/human-capacity-building, news stories, team expertise). To apply on another database:
+  `npx tsx prisma/content/2026-11-20-human-capacity-building.ts` (safe to re-run).
