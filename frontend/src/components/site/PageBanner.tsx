@@ -1,4 +1,5 @@
-import { BANNER_TILES } from "@/lib/illustrations";
+import { PLACEHOLDER } from "@/lib/site-images";
+import { HeaderSlides } from "./HeaderSlides";
 import { TechLines } from "./TechLines";
 
 const OVERLAYS = {
@@ -7,19 +8,20 @@ const OVERLAYS = {
 };
 
 /**
- * ALU-style inner-page banner: a mosaic of pictures under a dark fade,
- * with a big bold title (lines split on "\n") and an optional subtitle.
+ * Inner-page banner: a slider of pictures (they fade from one to the next) under a dark fade,
+ * with a big bold title (lines split on newlines) and an optional subtitle. The pictures come
+ * from Dashboard → Pictures & sliders; with none, the programme's logo is shown.
  */
 export function PageBanner({
   title,
   subtitle,
-  tiles = BANNER_TILES,
+  images = [PLACEHOLDER],
   tone = "navy",
   height = 420,
 }: {
   title: string;
   subtitle?: string;
-  tiles?: string[];
+  images?: string[];
   tone?: keyof typeof OVERLAYS;
   height?: number;
 }) {
@@ -32,12 +34,8 @@ export function PageBanner({
 
   return (
     <section className="relative flex items-center overflow-hidden bg-[#0b1c3d] text-white" style={{ minHeight: height }}>
-      <div aria-hidden="true" className="absolute inset-0 grid grid-cols-4 grid-rows-2">
-        {tiles.slice(0, 8).map((src, i) => (
-          <img key={i} src={src} alt="" className="block h-full w-full object-cover" />
-        ))}
-      </div>
-      <div aria-hidden="true" className="absolute inset-0" style={{ background: OVERLAYS[tone] }} />
+      <HeaderSlides images={images.length > 0 ? images : [PLACEHOLDER]} controlsClassName="bottom-4 right-4 sm:right-8" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={{ background: OVERLAYS[tone] }} />
       <TechLines />
       <div className="banner-in relative mx-auto w-full max-w-[1172px] px-4 py-16">
         <h1 className="text-[44px] font-bold leading-[.92] tracking-[-0.035em] sm:text-[62px]">{lines(title)}</h1>

@@ -5,6 +5,24 @@ export interface SiteInfo {
   mission: string;
   vision: string;
   aboutText: string;
+  generalObjective: string;
+  /** One objective per line. */
+  specificObjectives: string;
+  /** Paragraphs separated by a blank line. */
+  governanceText: string;
+  /** Paragraphs separated by a blank line. */
+  areasText: string;
+  /** Comma-separated district names. */
+  coreDistricts: string;
+  otherDistricts: string;
+  /** The office location in words or a Plus Code, e.g. "FJWG+9XF, Ave Mikeno, Musanze". */
+  location: string;
+  /** Google Maps link to the office. */
+  mapLink: string;
+  latitude: string;
+  longitude: string;
+  /** Street View embed address (https://www.google.com/maps/embed?...). */
+  streetViewUrl: string;
   contactEmail: string;
   phone: string;
   address: string;
@@ -20,6 +38,9 @@ export interface NewsSummary {
   excerpt: string;
   coverImage: string | null;
   publishedAt: string | null;
+  /** An uploaded video (/uploads/...) and/or a YouTube, Vimeo or Facebook link. */
+  videoFile?: string | null;
+  videoUrl?: string;
 }
 
 export interface NewsItem extends NewsSummary {
@@ -52,6 +73,8 @@ export interface TeamMember {
   name: string;
   slug: string | null;
   role: string;
+  /** Box of the organisational chart (lib/team-categories.ts), or "" if not placed. */
+  category: string;
   bio: string;
   email: string;
   phone: string;
@@ -101,6 +124,34 @@ export interface Partner {
   websiteUrl: string;
   description: string;
   sortOrder: number;
+}
+
+export type CertificateKind = "certificate" | "appreciation";
+
+/** A certificate or an appreciation (Certificates page). */
+export interface Certificate {
+  id: number;
+  title: string;
+  kind: CertificateKind;
+  issuer: string;
+  /** Date only, as an ISO string at midnight UTC. */
+  issuedOn: string | null;
+  description: string;
+  image: string | null;
+}
+
+/** What a visitor says about the programme, once approved (home page). */
+export interface Testimonial {
+  id: number;
+  name: string;
+  /** Where they are from or what they do; may be empty. */
+  place: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface AdminTestimonial extends Testimonial {
+  isApproved: boolean;
 }
 
 export interface ContactMessage {

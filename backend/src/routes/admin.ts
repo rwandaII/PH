@@ -6,21 +6,57 @@ import { requireAuth } from '../lib/auth.js';
 import { optionalUrl } from '../lib/crud.js';
 import { kigaliDay, lastDays } from '../lib/analytics.js';
 import { HttpError } from '../lib/errors.js';
-import { newsRouter, partnersRouter, projectsRouter, servicesRouter, teamRouter } from './resources.js';
+import { refreshAfterChanges } from '../lib/revalidate.js';
+import { publicPath, removeUpload, videoUpload } from '../lib/upload.js';
+import { certificatesRouter, newsRouter, partnersRouter, projectsRouter, servicesRouter, siteImagesRouter, teamRouter } from './resources.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth);
+// Dashboard changes: refresh the website's cached pages so they show at once.
+adminRouter.use(refreshAfterChanges);
 
 adminRouter.use('/news', newsRouter);
 adminRouter.use('/projects', projectsRouter);
 adminRouter.use('/team', teamRouter);
 adminRouter.use('/partners', partnersRouter);
 adminRouter.use('/services', servicesRouter);
+adminRouter.use('/certificates', certificatesRouter);
+adminRouter.use('/site-images', siteImagesRouter);
+
+/* ---------- A story's video file ---------- */
+
+const storyId = (raw: string) => {
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id < 1) throw new HttpError(400, 'Invalid id');
+  return id;
+};
+
+adminRouter.post('/news/:id/video', videoUpload, async (req, res) => {
+  const id = storyId(String(req.params.id));
+  const story = await prisma.news.findUnique({ where: { id }, select: { videoFile: true } });
+  if (!story) {
+    if (req.file) removeUpload(publicPath(req.file.filename));
+    throw new HttpError(404, 'Not found');
+  }
+  if (!req.file) throw new HttpError(400, 'Choose a video to upload');
+  const saved = await prisma.news.update({ where: { id }, data: { videoFile: publicPath(req.file.filename) } });
+  removeUpload(story.videoFile);
+  res.json(saved);
+});
+
+adminRouter.delete('/news/:id/video', async (req, res) => {
+  const id = storyId(String(req.params.id));
+  const story = await prisma.news.findUnique({ where: { id }, select: { videoFile: true } });
+  if (!story) throw new HttpError(404, 'Not found');
+  const saved = await prisma.news.update({ where: { id }, data: { videoFile: null } });
+  removeUpload(story.videoFile);
+  res.json(saved);
+});
 
 /* ---------- Dashboard overview ---------- */
 
 adminRouter.get('/stats', async (_req, res) => {
-  const [news, projects, team, partners, unreadMessages, pendingComments, services] = await Promise.all([
+  const [news, projects, team, partners, unreadMessages, pendingComments, services, certificates, pendingTestimonials] = await Promise.all([
     prisma.news.count(),
     prisma.project.count(),
     prisma.teamMember.count(),
@@ -28,8 +64,10 @@ adminRouter.get('/stats', async (_req, res) => {
     prisma.contactMessage.count({ where: { isRead: false } }),
     prisma.newsComment.count({ where: { isApproved: false } }),
     prisma.service.count(),
+    prisma.certificate.count(),
+    prisma.testimonial.count({ where: { isApproved: false } }),
   ]);
-  res.json({ news, projects, team, partners, unreadMessages, pendingComments, services });
+  res.json({ news, projects, team, partners, unreadMessages, pendingComments, services, certificates, pendingTestimonials });
 });
 
 /* ---------- Site information (single row) ---------- */
@@ -42,6 +80,28 @@ const siteSchema = z.object({
   mission: text(5000),
   vision: text(5000),
   aboutText: text(50000),
+  generalObjective: text(5000),
+  specificObjectives: text(10000),
+  governanceText: text(20000),
+  areasText: text(20000),
+  coreDistricts: text(255),
+  otherDistricts: text(255),
+  location: text(255),
+  mapLink: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === '' || /^https:\/\/\S+$/i.test(v), 'Paste the link from Google Maps (starts with https://)')
+    .default(''),
+  latitude: z.string().trim().max(30).refine((v) => v === '' || /^-?\d{1,2}(\.\d+)?$/.test(v), 'Enter a latitude such as -1.5031').default(''),
+  longitude: z.string().trim().max(30).refine((v) => v === '' || /^-?\d{1,3}(\.\d+)?$/.test(v), 'Enter a longitude such as 29.6290').default(''),
+  streetViewUrl: z
+    .string()
+    .trim()
+    .max(2000)
+    .transform((v) => (v.match(/src="([^"]+)"/)?.[1] ?? v).trim())
+    .refine((v) => v === '' || /^https:\/\/www\.google\.com\/maps\/embed\?/.test(v), 'Paste the Street View embed code or address from Google Maps')
+    .default(''),
   contactEmail: z.union([z.literal(''), z.string().trim().email().max(190)]).default(''),
   phone: text(60),
   address: text(255),
@@ -132,6 +192,28 @@ adminRouter.delete('/comments/:id', async (req, res) => {
   const found = await prisma.newsComment.findUnique({ where: { id } });
   if (!found) throw new HttpError(404, 'Not found');
   await prisma.newsComment.delete({ where: { id } });
+  res.status(204).end();
+});
+
+/* ---------- Testimonials (what visitors say about us) ---------- */
+
+adminRouter.get('/testimonials', async (_req, res) => {
+  res.json(await prisma.testimonial.findMany({ orderBy: [{ isApproved: 'asc' }, { createdAt: 'desc' }] }));
+});
+
+adminRouter.patch('/testimonials/:id', async (req, res) => {
+  const id = commentId(req.params.id);
+  const { isApproved } = z.object({ isApproved: z.boolean() }).parse(req.body ?? {});
+  const found = await prisma.testimonial.findUnique({ where: { id } });
+  if (!found) throw new HttpError(404, 'Not found');
+  res.json(await prisma.testimonial.update({ where: { id }, data: { isApproved } }));
+});
+
+adminRouter.delete('/testimonials/:id', async (req, res) => {
+  const id = commentId(req.params.id);
+  const found = await prisma.testimonial.findUnique({ where: { id } });
+  if (!found) throw new HttpError(404, 'Not found');
+  await prisma.testimonial.delete({ where: { id } });
   res.status(204).end();
 });
 

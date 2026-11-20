@@ -1,5 +1,6 @@
 "use client";
 
+import { Img } from "@/components/site/Img";
 import Link from "next/link";
 import { TechLines } from "./TechLines";
 import { useEffect, useState } from "react";
@@ -22,24 +23,21 @@ const INTERVAL_MS = 7000;
  * Home hero, measured from ALU: 748px tall, halftone-wave background, a 345x488
  * cover card on the left and the text aligned to its top, arrows at the edges.
  * Moves on by itself every 7 seconds; pauses on hover, keyboard focus, a hidden tab,
- * the pause button, or when the visitor prefers reduced motion.
+ * or when the visitor prefers reduced motion.
  */
 export function HeroSlider({
   slides,
-  partner,
   programName,
 }: {
   slides: HeroSlide[];
-  partner: { name: string; logo: string } | null;
   programName: string;
 }) {
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false); // the visitor pressed pause
   const [holding, setHolding] = useState(false); // pointer or focus inside
   const [reduced, setReduced] = useState(false);
   const slide = slides[index];
   const many = slides.length > 1;
-  const playing = many && !paused && !holding && !reduced;
+  const playing = many && !holding && !reduced;
   const go = (step: number) => setIndex((i) => (i + step + slides.length) % slides.length);
 
   useEffect(() => {
@@ -78,13 +76,6 @@ export function HeroSlider({
       />
       <TechLines />
 
-      {partner && (
-        <div className="absolute right-4 top-[18px] z-10 flex flex-col items-center gap-1 rounded-[10px] bg-white px-3 pb-2 pt-1.5 text-navy shadow-[0_10px_24px_-10px_rgba(0,20,60,.6)] sm:right-[2.2%]">
-          <span className="text-[11.5px] font-semibold text-muted">In partnership with</span>
-          <img src={partner.logo} alt={partner.name} className="h-8 w-auto max-w-[120px] object-contain sm:h-10" />
-        </div>
-      )}
-
       {many && (
         <>
           <button type="button" aria-label="Previous slide" onClick={() => go(-1)} className="absolute left-[2.3%] top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-white opacity-90 hover:opacity-100">
@@ -93,23 +84,6 @@ export function HeroSlider({
           <button type="button" aria-label="Next slide" onClick={() => go(1)} className="absolute right-[2.5%] top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center text-white opacity-90 hover:opacity-100">
             <SlideArrow direction="next" />
           </button>
-          <button
-            type="button"
-            onClick={() => setPaused((p) => !p)}
-            aria-label={paused ? "Play slideshow" : "Pause slideshow"}
-            className="absolute bottom-6 left-1/2 z-10 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-white/60 text-white opacity-80 hover:opacity-100"
-          >
-            {paused ? (
-              <svg width="12" height="14" viewBox="0 0 12 14" aria-hidden="true">
-                <path d="M1 1v12l10-6z" fill="currentColor" />
-              </svg>
-            ) : (
-              <svg width="12" height="14" viewBox="0 0 12 14" aria-hidden="true">
-                <rect x="1" y="1" width="3.5" height="12" fill="currentColor" />
-                <rect x="7.5" y="1" width="3.5" height="12" fill="currentColor" />
-              </svg>
-            )}
-          </button>
         </>
       )}
 
@@ -117,7 +91,7 @@ export function HeroSlider({
         {/* key={index}: each slide remounts, so its entrance animation plays again. */}
         <div key={`card-${index}`} className="hero-card-in max-w-full flex-[0_0_345px]">
           <div className="relative flex h-[464px] flex-col justify-between overflow-hidden bg-[#bfe0f5] px-6 py-[26px]">
-            <img src={slide.image} alt={slide.imageAlt} className="absolute inset-0 h-full w-full object-cover" />
+            <Img src={slide.image} alt={slide.imageAlt} priority className="absolute inset-0 h-full w-full object-cover" />
             <span aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,46,109,.85)_0%,rgba(0,46,109,0)_32%,rgba(0,46,109,0)_70%,rgba(0,46,109,.55)_100%)]" />
             <span className="relative text-[13px] font-bold">{programName}</span>
             <span className="relative self-start bg-accent px-1.5 py-0.5 text-[16px] font-medium">{slide.caption}</span>

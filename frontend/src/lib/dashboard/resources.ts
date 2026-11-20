@@ -3,7 +3,9 @@
  * generic and read their columns and fields from here.
  */
 
-export type FieldType = "text" | "textarea" | "richtext" | "select" | "checkbox" | "number" | "url" | "image";
+import { TEAM_CATEGORY_OPTIONS } from "@/lib/team-categories";
+
+export type FieldType = "text" | "textarea" | "richtext" | "select" | "checkbox" | "number" | "url" | "image" | "date" | "video";
 
 export interface FieldDef {
   name: string;
@@ -21,11 +23,11 @@ export interface FieldDef {
 export interface ColumnDef {
   key: string;
   label: string;
-  kind?: "title" | "published" | "date" | "status" | "image" | "text";
+  kind?: "title" | "published" | "date" | "status" | "image" | "text" | "teamCategory";
 }
 
 export interface ResourceDef {
-  key: "news" | "projects" | "team" | "partners" | "services";
+  key: "news" | "projects" | "team" | "partners" | "services" | "certificates";
   label: string;
   singular: string;
   /** Path under /api/admin. */
@@ -42,6 +44,11 @@ export const STATUS_OPTIONS = [
   { value: "planned", label: "Planned" },
   { value: "ongoing", label: "In progress" },
   { value: "completed", label: "Completed" },
+];
+
+export const CERTIFICATE_KINDS = [
+  { value: "certificate", label: "Certificate" },
+  { value: "appreciation", label: "Appreciation" },
 ];
 
 const sortField: FieldDef = {
@@ -73,6 +80,18 @@ export const RESOURCES: Record<ResourceDef["key"], ResourceDef> = {
       { name: "excerpt", label: "Short summary", type: "textarea", hint: "Shown in news lists and when the story is shared. Up to 500 characters." },
       { name: "coverImage", label: "Cover image", type: "image" },
       { name: "content", label: "Story", type: "richtext" },
+      {
+        name: "videoUrl",
+        label: "Video link (optional)",
+        type: "url",
+        hint: "A YouTube, Vimeo or Facebook video. Best for long videos or slow connections: paste the link from the video's Share button.",
+      },
+      {
+        name: "videoFile",
+        label: "Video file (optional)",
+        type: "video",
+        hint: "MP4, WebM or MOV, up to 300 MB. It plays on the story page and in Videos on the News page.",
+      },
       { name: "slug", label: "Web address", type: "text", hint: "Leave empty to make one from the title.", narrow: true },
       { name: "isPublished", label: "Show on the public site", type: "checkbox", initial: false },
     ],
@@ -115,11 +134,20 @@ export const RESOURCES: Record<ResourceDef["key"], ResourceDef> = {
       { key: "photo", label: "", kind: "image" },
       { key: "name", label: "Name", kind: "title" },
       { key: "role", label: "Role", kind: "text" },
+      { key: "category", label: "Place in the chart", kind: "teamCategory" },
       { key: "sortOrder", label: "Order", kind: "text" },
     ],
     fields: [
       { name: "name", label: "Name", type: "text", required: true, narrow: true },
       { name: "role", label: "Role", type: "text", required: true, narrow: true },
+      {
+        name: "category",
+        label: "Place in the organisational chart",
+        type: "select",
+        options: TEAM_CATEGORY_OPTIONS,
+        initial: "",
+        hint: "The box of the chart this person works in. The About page groups the team by it, and the chart box links to them.",
+      },
       { name: "photo", label: "Photo", type: "image", hint: "A square photo works best." },
       { name: "bio", label: "Biography", type: "textarea", required: true, hint: "Required. Shown in full on the person's own page; the first lines appear on the About page. Leave a blank line between paragraphs." },
       { name: "expertise", label: "Areas of work", type: "text", hint: "Separate with commas, e.g. Water supply, Hygiene and sanitation." },
@@ -181,6 +209,32 @@ export const RESOURCES: Record<ResourceDef["key"], ResourceDef> = {
       { name: "photo", label: "Photo", type: "image", hint: "A landscape photo of this work." },
       { name: "slug", label: "Web address", type: "text", hint: "Leave empty to make one from the name.", narrow: true },
       { ...sortField },
+    ],
+  },
+  certificates: {
+    key: "certificates",
+    label: "Certificates",
+    singular: "certificate",
+    api: "/admin/certificates",
+    publicPath: (i) => (i.isPublished ? "/certificates" : null),
+    newLabel: "Add a certificate",
+    intro: "Certificates and appreciations the program has received. They appear on the public Certificates page once you publish them.",
+    columns: [
+      { key: "image", label: "", kind: "image" },
+      { key: "title", label: "Title", kind: "title" },
+      { key: "kind", label: "Type", kind: "status" },
+      { key: "isPublished", label: "Status", kind: "published" },
+      { key: "issuedOn", label: "Date", kind: "date" },
+    ],
+    fields: [
+      { name: "title", label: "Title", type: "text", required: true, hint: "e.g. Certificate of Compliance, or Letter of appreciation" },
+      { name: "kind", label: "Type", type: "select", options: CERTIFICATE_KINDS, initial: "certificate", narrow: true },
+      { name: "issuedOn", label: "Date", type: "date", narrow: true, hint: "The date on the document. Can be left empty." },
+      { name: "issuer", label: "Given by", type: "text", hint: "The organisation or person, e.g. Rwanda Governance Board (RGB)." },
+      { name: "image", label: "Scan or photo of the document", type: "image", hint: "A clear JPG or PNG of the whole page." },
+      { name: "description", label: "What it says", type: "textarea", hint: "A short summary of what the document certifies or thanks the program for." },
+      { ...sortField },
+      { name: "isPublished", label: "Show on the public site", type: "checkbox", initial: true },
     ],
   },
 };

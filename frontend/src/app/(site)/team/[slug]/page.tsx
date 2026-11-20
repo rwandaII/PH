@@ -6,14 +6,22 @@ import { Chevron, Facebook, Instagram, LinkedIn, Pin, WhatsApp, XLogo } from "@/
 import { WithPageNav, type PageNavItem } from "@/components/site/PageNav";
 import { ProfileArch } from "@/components/site/ProfileArch";
 import { FactsBand } from "@/components/site/ProgramLayout";
-import { Portrait } from "@/components/site/TeamCarousel";
-import { paragraphs } from "@/lib/format";
+import { TeamCard } from "@/components/site/TeamCard";
+import { groupTeam } from "@/lib/team-categories";
+import { reveal } from "@/lib/reveal";
+import { paragraphs, phoneNumbers } from "@/lib/format";
 import { getPublicOr, getSite } from "@/lib/server-api";
 import type { TeamMember } from "@/lib/types";
 
 type Props = { params: Promise<{ slug: string }> };
 
 const getMember = async (slug: string) => getPublicOr<TeamMember | null>(`/team/${encodeURIComponent(slug)}`, null);
+
+/** Build every published page ahead of time so it opens instantly; new ones are built on first visit. */
+export async function generateStaticParams() {
+  const team = await getPublicOr<{ slug: string | null }[]>("/team", []);
+  return team.flatMap((m) => (m.slug ? [{ slug: m.slug }] : []));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const m = await getMember((await params).slug);
@@ -33,6 +41,8 @@ export default async function TeamMemberPage({ params }: Props) {
     .map((s) => s.trim())
     .filter(Boolean);
   const others = team.filter((t) => t.id !== m.id && t.slug);
+  // In chart order, each with their place in the chart.
+  const colleagues = groupTeam(others).flatMap((g) => g.parts.flatMap((p) => p.members.map((o) => ({ m: o, label: p.label }))));
   const firstName = m.name.split(/\s+/)[0];
   const office = m.address || site.address;
   const email = m.email || site.contactEmail;
@@ -66,7 +76,7 @@ export default async function TeamMemberPage({ params }: Props) {
         <TechLines />
         <div className="relative mx-auto flex max-w-[1172px] flex-wrap items-end justify-between gap-x-16 gap-y-10 px-4 pb-14 pt-12 lg:min-h-[460px]">
           <div className="banner-in min-w-0 flex-[1_1_380px] self-center">
-            <Link href="/about#team" className="inline-flex min-h-9 items-center gap-2.5 text-[13.5px] font-semibold text-sky hover:text-white">
+            <Link href="/team" className="inline-flex min-h-9 items-center gap-2.5 text-[13.5px] font-semibold text-sky hover:text-white">
               <Chevron size={9} className="rotate-180" /> Our team
             </Link>
             <h1 className="font-display mt-3 text-[40px] font-normal leading-[1.02] sm:text-[54px]">{m.name}</h1>
@@ -157,7 +167,7 @@ export default async function TeamMemberPage({ params }: Props) {
               <h2 className="font-display text-[32px] font-normal leading-[1.1] text-navy">Areas of work</h2>
               <ul className="mt-8 grid gap-px bg-[#bcd6e3] sm:grid-cols-2">
                 {areas.map((a) => (
-                  <li key={a} className="flex items-center gap-4 bg-white px-5 py-5 text-[16px] font-semibold text-navy">
+                  <li key={a} className="lift-card flex items-center gap-4 bg-white px-5 py-5 text-[16px] font-semibold text-navy">
                     <span aria-hidden="true" className="h-8 w-[3px] bg-accent" />
                     {a}
                   </li>
@@ -185,9 +195,11 @@ export default async function TeamMemberPage({ params }: Props) {
                 <div>
                   <dt className="text-[13px] text-muted">Phone</dt>
                   <dd className="mt-1">
-                    <a href={`tel:${phone.replace(/\s+/g, "")}`} className="text-[16px] font-semibold text-accent hover:underline">
-                      {phone}
-                    </a>
+                    {phoneNumbers(phone).map((n) => (
+                      <a key={n.href} href={n.href} className="block text-[16px] font-semibold text-accent hover:underline">
+                        {n.label}
+                      </a>
+                    ))}
                   </dd>
                 </div>
               )}
@@ -219,17 +231,28 @@ export default async function TeamMemberPage({ params }: Props) {
         </section>
 
         {others.length > 0 && (
-          <section id="colleagues" className="scroll-mt-6 bg-mist">
-            <div className="mx-auto max-w-[1172px] px-4 py-16 lg:py-20 lg:pr-[300px]">
-              <h2 className="font-display text-[32px] font-normal leading-[1.1] text-navy">Colleagues</h2>
-              <ul className="mt-8 grid gap-10 [grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]">
-                {others.map((o) => (
-                  <li key={o.id}>
-                    <Link href={`/team/${o.slug}`} className="group block">
-                      <Portrait member={o} />
-                      <span className="mt-4 block text-[15px] font-bold text-navy group-hover:text-accent">{o.name}</span>
-                      <span className="block text-[13px] text-grey">{o.role}</span>
-                    </Link>
+          <section id="colleagues" className="relative scroll-mt-6 overflow-hidden bg-mist">
+            <span aria-hidden="true" className="team-ripple absolute -left-24 -top-24 h-72 w-72 rounded-full border border-accent/15" />
+            <span aria-hidden="true" className="team-ripple team-ripple-2 absolute -left-40 -top-40 h-[26rem] w-[26rem] rounded-full border border-accent/10" />
+            <div className="relative mx-auto max-w-[1172px] px-4 py-16 lg:py-20 lg:pr-[300px]">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <h2 className="font-display text-[32px] font-normal leading-[1.1] text-navy">Colleagues</h2>
+                  <p className="mt-2 text-[14.5px] text-muted">
+                    {others.length === 1 ? "1 person works" : `${others.length} people work`} with {firstName} on the programme.
+                  </p>
+                </div>
+                <Link
+                  href="/team"
+                  className="inline-flex min-h-11 items-center gap-2.5 border border-accent px-5 text-[14px] font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+                >
+                  See the whole team <Chevron size={10} />
+                </Link>
+              </div>
+              <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-6 sm:[grid-template-columns:repeat(auto-fill,minmax(185px,1fr))]">
+                {colleagues.map(({ m: o, label }, i) => (
+                  <li key={o.id} {...reveal(i % 4, "rise", 90)}>
+                    <TeamCard member={o} label={label || undefined} />
                   </li>
                 ))}
               </ul>

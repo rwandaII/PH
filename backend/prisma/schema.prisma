@@ -25,6 +25,10 @@ model News {
   excerpt     String    @default("") @db.VarChar(500)
   content     String    @db.LongText
   coverImage  String?   @map("cover_image") @db.VarChar(255)
+  /// An uploaded video file (/uploads/...), shown on the story page.
+  videoFile   String?   @map("video_file") @db.VarChar(255)
+  /// A YouTube, Vimeo or Facebook video link, shown on the story page.
+  videoUrl    String    @default("") @map("video_url") @db.VarChar(500)
   isPublished Boolean   @default(false) @map("is_published")
   publishedAt DateTime? @map("published_at")
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -77,6 +81,8 @@ model TeamMember {
   name      String   @db.VarChar(120)
   slug      String?  @unique @db.VarChar(140)
   role      String   @db.VarChar(120)
+  /// Box of the organisational chart the person belongs to (see src/lib/team-categories.ts); empty = not placed.
+  category  String   @default("") @db.VarChar(40)
   bio       String   @default(dbgenerated("('')")) @db.Text
   email     String   @default("") @db.VarChar(190)
   phone     String   @default("") @db.VarChar(60)
@@ -121,6 +127,23 @@ model SiteInfo {
   mission      String   @default(dbgenerated("('')")) @db.Text
   vision       String   @default(dbgenerated("('')")) @db.Text
   aboutText    String   @default(dbgenerated("('')")) @map("about_text") @db.LongText
+  /// Strategic objectives: the general objective, then the specific ones (one per line).
+  generalObjective   String @default(dbgenerated("('')")) @map("general_objective") @db.Text
+  specificObjectives String @default(dbgenerated("('')")) @map("specific_objectives") @db.Text
+  /// Legal status, governance and organisational structure: paragraphs separated by a blank line.
+  governanceText     String @default(dbgenerated("('')")) @map("governance_text") @db.Text
+  /// Where the program works: paragraphs separated by a blank line.
+  areasText          String @default(dbgenerated("('')")) @map("areas_text") @db.Text
+  /// Districts, separated by commas: the core area, then other districts reached.
+  coreDistricts      String @default("") @map("core_districts") @db.VarChar(255)
+  otherDistricts     String @default("") @map("other_districts") @db.VarChar(255)
+  /// The office location in words or a Plus Code, e.g. "FJWG+9XF, Ave Mikeno, Musanze".
+  location       String @default("") @db.VarChar(255)
+  /// Where the office is: a Google Maps link, the map pin, and a Street View embed address.
+  mapLink        String @default("") @map("map_link") @db.VarChar(500)
+  latitude       String @default("") @db.VarChar(30)
+  longitude      String @default("") @db.VarChar(30)
+  streetViewUrl  String @default(dbgenerated("('')")) @map("street_view_url") @db.Text
   contactEmail String   @default("") @map("contact_email") @db.VarChar(190)
   phone        String   @default("") @db.VarChar(60)
   address      String   @default("") @db.VarChar(255)
@@ -161,6 +184,63 @@ model Service {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("services")
+}
+
+/// A picture in one of the site's picture places: a page-header slider (several pictures) or a
+/// single spot such as the About portrait. Edited in Dashboard → Pictures & sliders. The list
+/// of places is in src/lib/site-images.ts (and frontend/src/lib/site-images.ts).
+model SiteImage {
+  id        Int      @id @default(autoincrement())
+  place     String   @db.VarChar(60)
+  image     String?  @db.VarChar(255)
+  caption   String   @default("") @db.VarChar(200)
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([place, sortOrder])
+  @@map("site_images")
+}
+
+/// What a visitor says about the programme (Contact page). Shown on the home page only after
+/// staff approve it in the dashboard.
+model Testimonial {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(120)
+  /// Optional: where they are from or what they do, e.g. "Teacher, Musanze".
+  place      String   @default("") @db.VarChar(160)
+  message    String   @db.Text
+  isApproved Boolean  @default(false) @map("is_approved")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([isApproved, createdAt])
+  @@map("testimonials")
+}
+
+enum CertificateKind {
+  certificate
+  appreciation
+}
+
+/// A certificate (registration, compliance, accreditation) or a letter or award of appreciation,
+/// shown on the public Certificates page.
+model Certificate {
+  id          Int             @id @default(autoincrement())
+  title       String          @db.VarChar(200)
+  kind        CertificateKind @default(certificate)
+  /// Who issued or gave it, e.g. "Rwanda Governance Board (RGB)".
+  issuer      String          @default("") @db.VarChar(200)
+  issuedOn    DateTime?       @map("issued_on") @db.Date
+  description String          @default(dbgenerated("('')")) @db.Text
+  /// A scan or photo of the document.
+  image       String?         @db.VarChar(255)
+  sortOrder   Int             @default(0) @map("sort_order")
+  isPublished Boolean         @default(true) @map("is_published")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@index([isPublished, kind])
+  @@map("certificates")
 }
 
 /// One page view on the public site, for the dashboard's Statistics page. No IP address or

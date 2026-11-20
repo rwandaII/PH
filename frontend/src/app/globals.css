@@ -220,22 +220,353 @@ body {
 
 /* ---------- Motion ---------- */
 
-/* Scroll reveal: content fades in once as it reaches the screen. A quiet fade only, with no
-   sliding, springing or staggering. Hidden only when JavaScript runs (html.js), so
-   content never stays invisible. */
+/* Scroll reveal: content rises, slides or zooms in once as it reaches the screen. Items in a
+   list start one after another (--reveal-delay, set by reveal() or by RevealOnScroll). Hidden
+   only when JavaScript runs (html.js), so content never stays invisible. */
 html.js [data-reveal] {
   opacity: 0;
-  transition: opacity 0.6s ease;
+  transform: translateY(34px);
+  transition:
+    opacity 0.75s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.85s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+html.js [data-reveal="left"] {
+  transform: translateX(-48px);
+}
+html.js [data-reveal="right"] {
+  transform: translateX(48px);
+}
+html.js [data-reveal="zoom"] {
+  transform: scale(0.92);
+}
+html.js [data-reveal="pop"] {
+  transform: translateY(14px) scale(0.94);
+  transition-timing-function: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+html.js [data-reveal="rise"] {
+  transform: translateY(48px);
+}
+html.js [data-reveal="fade"] {
+  transform: none;
 }
 html.js [data-reveal].is-visible {
   opacity: 1;
+  transform: none;
 }
 
-/* Cards and chips no longer lift or sparkle on hover; the photo inside (.zoom) still
-   enlarges a little and titles change colour, in answer to the pointer. */
+/* Page change: the new page eases in (app/(site)/template.tsx). The transform is only applied
+   while the animation runs, so fixed elements inside are unaffected afterwards. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+.page-in {
+  animation: page-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+/* Any other card: it rises a little and gains a soft shadow under the pointer. Uses the
+   `translate` property, so it still works on cards that also scroll-reveal (which set transform). */
+.lift-card {
+  transition:
+    translate 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.4s ease;
+}
+.lift-card:hover,
+.lift-card:focus-within {
+  translate: 0 -6px;
+  box-shadow: 0 26px 44px -30px rgba(0, 30, 70, 0.55);
+}
+
+/* Cards lift towards the pointer; titles change colour. */
+.pop-card,
+.team-card {
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.45s ease;
+}
+.pop-card:hover,
+.pop-card:focus-visible,
+.team-card:hover,
+.team-card:focus-visible {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 50px -30px rgba(0, 30, 70, 0.55);
+}
 .pop-card h3,
 .pop-card .font-display {
   transition: color 0.2s ease;
+}
+.pop-chip {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.pop-chip:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 26px -18px rgba(0, 30, 70, 0.5);
+}
+.pop-portrait img {
+  transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.pop-portrait:hover img {
+  transform: scale(1.06);
+}
+
+/* Team cards: the ripple rings breathe slowly. */
+@keyframes ripple-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.55;
+  }
+}
+.team-ripple {
+  animation: ripple-breathe 7s ease-in-out infinite;
+}
+.team-ripple-2 {
+  animation-delay: -3.5s;
+}
+/* The person or role a chart box links to is highlighted when you arrive. */
+@keyframes target-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 119, 182, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 26px rgba(0, 119, 182, 0);
+  }
+}
+.team-part:target .team-card {
+  animation: target-glow 1.4s ease-out 0.3s 2;
+}
+.team-part:target h3 {
+  color: var(--navy);
+}
+
+/* Card pictures float and sway slowly, like something resting on water. This uses the
+   `translate`/`rotate` properties (not `transform`), so it adds to hover zooms and lifts instead
+   of replacing them. Neighbouring cards are out of step so they never move together. */
+@keyframes card-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+.float-card, .team-card, .pop-chip, .pop-portrait, .testimonial-avatar, .zoom:not(.absolute) {
+  animation: card-float 7s ease-in-out infinite;
+  backface-visibility: hidden;
+}
+:is(li:nth-child(2n), .float-card:nth-child(2n)) :is(.float-card, .team-card, .pop-chip, .pop-portrait, .testimonial-avatar, .zoom:not(.absolute)),
+li:nth-child(2n):is(.float-card, .team-card, .pop-chip, .pop-portrait, .testimonial-avatar, .zoom:not(.absolute)) {
+  animation-delay: -2.7s;
+}
+:is(li:nth-child(3n), .float-card:nth-child(3n)) :is(.float-card, .team-card, .pop-chip, .pop-portrait, .testimonial-avatar, .zoom:not(.absolute)),
+li:nth-child(3n):is(.float-card, .team-card, .pop-chip, .pop-portrait, .testimonial-avatar, .zoom:not(.absolute)) {
+  animation-delay: -5.3s;
+}
+
+/* Header water lines drift slowly towards the middle and back. The lines are a still picture;
+   only this transform moves, so nothing is redrawn while it plays. */
+@keyframes water-flow {
+  from {
+    transform: translate3d(0, -3px, 0);
+  }
+  to {
+    transform: translate3d(-34px, 3px, 0);
+  }
+}
+.water-flow {
+  animation: water-flow 13s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.water-flow-left {
+  animation-direction: alternate-reverse;
+  animation-duration: 15s;
+}
+
+/* Header sliders: the picture on show eases slowly closer (components/site/HeaderSlides.tsx). */
+@keyframes slide-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+.slide-zoom {
+  animation: slide-zoom 7.5s ease-out forwards;
+  will-change: transform;
+}
+
+/* Partner logos glide sideways without end; they stop under the pointer or keyboard focus. */
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+  will-change: transform;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* About → "Who we are" emblem panel: waves drift sideways (seamless, the SVG is two waves wide)
+   and the light behind the emblem breathes. Transform and opacity only, so it stays smooth. */
+@keyframes emblem-wave {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.emblem-wave {
+  animation: emblem-wave 9s linear infinite;
+  will-change: transform;
+}
+.emblem-wave-back {
+  animation-duration: 15s;
+  animation-direction: reverse;
+}
+@keyframes emblem-glow {
+  0%,
+  100% {
+    opacity: 0.75;
+    scale: 1;
+  }
+  50% {
+    opacity: 1;
+    scale: 1.12;
+  }
+}
+.emblem-glow {
+  animation: emblem-glow 6s ease-in-out infinite;
+}
+
+/* Back-to-top drop: one colour, swaying slowly all the time. */
+@keyframes drop-wave {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  25% {
+    transform: rotate(-9deg) translateY(-3px);
+  }
+  50% {
+    transform: rotate(0deg) translateY(-5px);
+  }
+  75% {
+    transform: rotate(9deg) translateY(-3px);
+  }
+}
+.drop-wave {
+  will-change: transform;
+  transform-origin: 50% 85%;
+  animation: drop-wave 3.6s ease-in-out infinite;
+  filter: drop-shadow(0 6px 8px rgba(0, 60, 120, 0.3));
+}
+.top-button:hover .drop-wave {
+  animation-duration: 1.8s;
+}
+
+/* Cards in a row rise in one after another when the carousel changes page. */
+@keyframes testimonial-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+.testimonial-in {
+  animation: testimonial-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+}
+
+/* Every card link lifts a little towards the pointer. */
+.zoom-host {
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.zoom-host:hover {
+  transform: translateY(-4px);
+}
+
+/* Main menu: a line slides in under the link you point at. */
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  right: 50%;
+  bottom: 14px;
+  height: 2px;
+  background: #48cae4;
+  transition:
+    left 0.3s ease,
+    right 0.3s ease;
+}
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  left: 24px;
+  right: 24px;
+}
+.nav-link[aria-current="page"]::after {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .nav-link::after {
+    display: none;
+  }
+}
+
+/* The logo: settles in when the page opens and turns gently on hover. */
+@keyframes logo-in {
+  from {
+    opacity: 0;
+    transform: rotate(-12deg) scale(0.8);
+  }
+}
+.logo-mark {
+  animation: logo-in 0.8s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+a:hover > .logo .logo-mark,
+.logo:hover .logo-mark {
+  transform: rotate(-6deg) scale(1.06);
+}
+
+/* A short accent line that draws itself under a heading. */
+.draw-line {
+  transform-origin: left;
+}
+html.js [data-reveal] .draw-line,
+html.js [data-reveal].draw-line {
+  transform: scaleX(0);
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) 0.35s;
+}
+html.js [data-reveal].is-visible .draw-line,
+html.js [data-reveal].draw-line.is-visible {
+  transform: scaleX(1);
+}
+
+/* Buttons: a sheen sweeps across on hover. */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+  pointer-events: none;
+}
+.btn-primary:hover::after {
+  transform: translateX(120%);
 }
 
 /* Hero slideshow: each new slide glides in. */
@@ -353,9 +684,55 @@ html.js [data-reveal].is-visible {
   }
   .pop-card:hover,
   .pop-card:focus-visible,
+  .team-card:hover,
+  .team-card:focus-visible,
   .pop-chip:hover,
   .pop-portrait:hover img {
     transform: none;
+  }
+  .page-in,
+  .team-ripple,
+  .logo-mark,
+  .team-part:target .team-card,
+  .drop-wave,
+  .water-flow,
+  .slide-zoom,
+  .marquee-track,
+  .emblem-wave,
+  .emblem-glow,
+  .testimonial-in,
+  .float-card,
+  .team-card,
+  .pop-chip,
+  .pop-portrait,
+  .testimonial-avatar,
+  .zoom:not(.absolute) {
+    animation: none;
+  }
+  .zoom-host:hover {
+    transform: none;
+  }
+  .marquee-track {
+    width: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .marquee-track > li[aria-hidden],
+  .marquee-track > li:has(> a[aria-hidden]) {
+    display: none;
+  }
+  .lift-card:hover,
+  .lift-card:focus-within {
+    translate: none;
+  }
+  html.js [data-reveal] .draw-line,
+  html.js [data-reveal].draw-line,
+  .btn-primary::after {
+    transform: none;
+    transition: none;
+  }
+  .btn-primary::after {
+    display: none;
   }
 }
 

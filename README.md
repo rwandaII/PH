@@ -21,21 +21,29 @@ This computer runs a separate MySQL just for the website, on port 3307, with its
 `%LOCALAPPDATA%\HydraulicProgram\mysql-data`. Your other MySQL (port 3306) is not used or
 changed. The connection details, including its password, are in `backend/.env`.
 
-Open three terminals:
+Open three terminals. **Fast mode** (use this to look at the site or work in the dashboard):
+pages are built ahead of time and open instantly.
 
 ```bash
 # 1. the website's database
 cd backend
 npm run db:start
 
-# 2. the API
+# 2. the API (build once after code changes, then start)
 cd backend
-npm run dev                         # http://localhost:4000
+npm run build
+npm start                           # http://localhost:4000
 
-# 3. the site
+# 3. the site (the API must be running while it builds)
 cd frontend
-npm run dev                         # http://localhost:3000
+npm run build
+npm start                           # http://localhost:3000
 ```
+
+Dashboard changes show on the site straight away even in fast mode: after every change the API
+tells the site to refresh (`REVALIDATE_SECRET`, the same value in `backend/.env` and
+`frontend/.env.local`). **Development mode** (`npm run dev` in both folders instead of build +
+start) reloads code as you edit it, but every page is slow the first time it is opened.
 
 Open http://localhost:3000 for the public site and http://localhost:3000/dashboard to log in
 with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from `backend/.env`. Change that password after your
@@ -118,7 +126,8 @@ BACKEND_URL=http://localhost:4000 npm start
 ```
 
 In production set `NODE_ENV=production` for the backend (secure cookies), set `CORS_ORIGINS`
-to the site's address, and back up both the MySQL database and `backend/uploads/`.
+to the site's address, set `FRONTEND_URL` (backend) to the site's address and the same
+`REVALIDATE_SECRET` in both apps, and back up both the MySQL database and `backend/uploads/`.
 
 ## Project notes
 

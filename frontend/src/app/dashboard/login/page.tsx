@@ -13,6 +13,7 @@ export default function LoginPage() {
       <div className="relative flex min-h-[220px] flex-[1_1_420px] items-end overflow-hidden bg-[linear-gradient(180deg,#2a7cbf_0%,#1d63a8_40%,#0e4488_75%,#0a3471_100%)] p-10 text-white">
         <TechLines />
         <div className="relative">
+          <img src="/logo/ph-logo-on-dark.png" alt="" width={347} height={267} className="logo-mark mb-6 block h-[96px] w-auto" />
           <p className="text-[25px] font-extrabold leading-none">Hydraulic Program</p>
           <p className="font-display mt-3 text-[30px] leading-tight">
             <span className="block text-[22px] text-white/70">Staff</span>dashboard.

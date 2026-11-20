@@ -26,11 +26,37 @@ const SECTIONS: { title: string; fields: { name: Key; label: string; rows?: numb
     ],
   },
   {
+    title: "Objectives, governance and where we work",
+    fields: [
+      { name: "generalObjective", label: "General objective", rows: 3 },
+      { name: "specificObjectives", label: "Specific objectives", rows: 6, hint: "One objective per line." },
+      { name: "governanceText", label: "Legal status, governance and structure", rows: 10, hint: "Shown on the About page next to the organisational chart. Leave an empty line between paragraphs." },
+      { name: "areasText", label: "Where we work", rows: 8, hint: "Leave an empty line between paragraphs." },
+      { name: "coreDistricts", label: "Main districts", narrow: true, hint: "Separate with commas, e.g. Musanze, Burera" },
+      { name: "otherDistricts", label: "Other districts reached", narrow: true, hint: "Separate with commas." },
+    ],
+  },
+  {
     title: "Contact details",
     fields: [
       { name: "contactEmail", label: "Email", type: "email", narrow: true },
       { name: "phone", label: "Phone", narrow: true },
       { name: "address", label: "Office address" },
+    ],
+  },
+  {
+    title: "Where the office is",
+    fields: [
+      { name: "location", label: "Office location", hint: "Shown under “Our office”, e.g. FJWG+9XF, Ave Mikeno, Musanze (a Google Maps Plus Code works well)." },
+      { name: "mapLink", label: "Google Maps link", type: "url", hint: "In Google Maps, choose Share → Copy link, and paste it here." },
+      { name: "latitude", label: "Latitude", narrow: true, hint: "e.g. -1.503174 (in Google Maps, right-click the place to copy it)" },
+      { name: "longitude", label: "Longitude", narrow: true, hint: "e.g. 29.629026" },
+      {
+        name: "streetViewUrl",
+        label: "Street View",
+        rows: 3,
+        hint: "Optional. In Google Maps Street View choose Share → Embed a map → Copy HTML, and paste it here.",
+      },
     ],
   },
   {

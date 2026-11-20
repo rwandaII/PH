@@ -22,4 +22,8 @@ export const config = {
     .filter(Boolean),
   uploadDir: path.resolve(process.env.UPLOAD_DIR ?? 'uploads'),
   maxUploadBytes: 5 * 1024 * 1024,
+  /** The public website. After every dashboard change the API asks it to refresh its cached pages. */
+  frontendUrl: (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, ''),
+  /** Shared with the website (frontend/.env.local); empty = don't ask it to refresh. */
+  revalidateSecret: process.env.REVALIDATE_SECRET ?? '',
 };

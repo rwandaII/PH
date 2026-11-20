@@ -1,5 +1,6 @@
 "use client";
 
+import { sendForm } from "@/lib/send-form";
 import { useState } from "react";
 import type { NewsComment } from "@/lib/types";
 
@@ -29,21 +30,14 @@ export function Comments({ slug, initial }: { slug: string; initial: NewsComment
     setStatus("sending");
     setError("");
     setFieldErrors({});
-    const res = await fetch(`/api/public/news/${encodeURIComponent(slug)}/comments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(new FormData(form))),
-    }).catch(() => null);
-    if (res?.ok) {
+    const result = await sendForm(`/news/${encodeURIComponent(slug)}/comments`, Object.fromEntries(new FormData(form)));
+    if (result.ok) {
       form.reset();
       setStatus("sent");
       return;
     }
-    const body = await res?.json().catch(() => null);
-    const fields: Record<string, string> = {};
-    for (const f of body?.fields ?? []) fields[f.path] = f.message;
-    setFieldErrors(fields);
-    setError(body?.error && !body.fields ? body.error : res ? "" : "The comment could not be sent. Check your connection and try again.");
+    setFieldErrors(result.fields);
+    setError(result.error);
     setStatus("idle");
   }
 
@@ -58,7 +52,7 @@ export function Comments({ slug, initial }: { slug: string; initial: NewsComment
       ) : (
         <ul className="mt-8 space-y-7">
           {initial.map((c) => (
-            <li key={c.id} className="flex gap-4">
+            <li key={c.id} className="lift-card flex gap-4 bg-white p-4 sm:p-5">
               <span aria-hidden="true" className="flex h-11 w-11 flex-none items-center justify-center rounded-full bg-mist text-[14px] font-bold text-navy">
                 {initials(c.name)}
               </span>

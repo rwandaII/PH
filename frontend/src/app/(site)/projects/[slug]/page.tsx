@@ -1,3 +1,4 @@
+import { Img } from "@/components/site/Img";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,6 +13,12 @@ import type { Project, ProjectSummary } from "@/lib/types";
 type Props = { params: Promise<{ slug: string }> };
 
 const getProject = async (slug: string) => getPublicOr<Project | null>(`/projects/${encodeURIComponent(slug)}`, null);
+
+/** Build every published page ahead of time so it opens instantly; new ones are built on first visit. */
+export async function generateStaticParams() {
+  const projects = await getPublicOr<{ slug: string }[]>("/projects", []);
+  return projects.map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const project = await getProject((await params).slug);
@@ -39,7 +46,7 @@ export default async function ProjectPage({ params }: Props) {
   const [project, all, site] = await Promise.all([getProject(slug), getPublicOr<ProjectSummary[]>("/projects", []), getSite()]);
   if (!project) notFound();
 
-  const cover = imageOr(project.coverImage, project.id);
+  const cover = imageOr(project.coverImage);
   const { text, photos } = splitContent(project.content);
   const framedPhoto = photos.find((p) => p !== project.coverImage) ?? cover;
   const gallery = photos.filter((p) => p !== framedPhoto);
@@ -51,7 +58,7 @@ export default async function ProjectPage({ params }: Props) {
 
   return (
     <>
-      <ProgramHero title={project.title} subtitle={`A project of the ${site.programName}`} place={project.location || "Ruhengeri Diocese"} text={project.summary} image={cover} />
+      <ProgramHero title={project.title} subtitle={`A project of the ${site.programName}`} place={project.location || "Ruhengeri Diocese"} text={project.summary} images={[cover, ...gallery.filter((g) => g !== cover)].slice(0, 6)} />
 
       <WithPageNav items={nav} action={{ href: "/contact", label: "Support this project" }}>
         <FactsBand
@@ -78,7 +85,7 @@ export default async function ProjectPage({ params }: Props) {
               <h2 className="font-display text-[34px] font-normal leading-[1.05]">Photos from the field</h2>
               <div className={`mt-10 grid gap-4 ${gallery.length > 1 ? "sm:grid-cols-2" : ""}`}>
                 {gallery.map((src, i) => (
-                  <img key={src} src={src} alt="" className={`block w-full object-cover ${gallery.length > 2 && i === 0 ? "aspect-[16/9] sm:col-span-2" : "aspect-[4/3]"}`} />
+                  <Img key={src} src={src} alt="" className={`float-card block w-full object-cover ${gallery.length > 2 && i === 0 ? "aspect-[16/9] sm:col-span-2" : "aspect-[4/3]"}`} />
                 ))}
               </div>
             </div>
@@ -91,7 +98,7 @@ export default async function ProjectPage({ params }: Props) {
               <h2 className="font-display text-[34px] font-normal leading-[1.05] text-white">Other projects</h2>
               <ul className="mt-10 grid gap-px bg-[#3d5468] sm:grid-cols-2 xl:grid-cols-3">
                 {others.map((p) => (
-                  <li key={p.id} className="bg-white">
+                  <li key={p.id} className="lift-card bg-white">
                     <Link href={`/projects/${p.slug}`} className="group flex h-full flex-col px-5 pb-6 pt-6">
                       <span className="font-display text-[21px] leading-[1.15] text-navy group-hover:text-accent">{p.title}</span>
                       <span className="mt-4 border-b border-accent pb-2 text-[12.5px] font-semibold text-accent">

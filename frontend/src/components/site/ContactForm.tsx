@@ -1,5 +1,6 @@
 "use client";
 
+import { sendForm } from "@/lib/send-form";
 import { useState } from "react";
 import { Chevron } from "./icons";
 
@@ -19,28 +20,14 @@ export function ContactForm() {
     setError("");
     setFieldErrors({});
 
-    const res = await fetch("/api/public/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(new FormData(form))),
-    }).catch(() => null);
-
-    if (res?.ok) {
+    const result = await sendForm("/contact", Object.fromEntries(new FormData(form)));
+    if (result.ok) {
       form.reset();
       setStatus("sent");
       return;
     }
-    const body = await res?.json().catch(() => null);
-    const fields: FieldErrors = {};
-    for (const f of body?.fields ?? []) fields[f.path] = f.message;
-    setFieldErrors(fields);
-    setError(
-      body?.error && !body.fields
-        ? body.error
-        : res
-          ? ""
-          : "The message could not be sent. Check your connection and try again.",
-    );
+    setFieldErrors(result.fields);
+    setError(result.error);
     setStatus("idle");
   }
 

@@ -1,3 +1,4 @@
+import { Img } from "@/components/site/Img";
 import Link from "next/link";
 import { HeroSlider, type HeroSlide } from "@/components/site/HeroSlider";
 import { ArrowRight, Chevron, Facebook } from "@/components/site/icons";
@@ -6,12 +7,16 @@ import { ProjectsShowcase } from "@/components/site/ProjectsShowcase";
 import { ServicesSection } from "@/components/site/ServicesSection";
 import { servicesFrom, type ServiceRow } from "@/lib/services";
 import { TeamCarousel } from "@/components/site/TeamCarousel";
+import { PartnerBadge } from "@/components/site/PartnerBadge";
+import { PartnerMarquee } from "@/components/site/PartnerMarquee";
+import { TestimonialsCarousel } from "@/components/site/TestimonialsCarousel";
 import { TechLines } from "@/components/site/TechLines";
 import { formatDate, paragraphs, STATUS_LABEL } from "@/lib/format";
 import { imageOr } from "@/lib/illustrations";
 import { reveal } from "@/lib/reveal";
-import { FALLBACK_SITE, getPublicOr } from "@/lib/server-api";
-import type { NewsSummary, Partner, ProjectSummary, SiteInfo, TeamMember } from "@/lib/types";
+import { FALLBACK_SITE, getPublicOr, getSiteImages } from "@/lib/server-api";
+import { pictureOf } from "@/lib/site-images";
+import type { NewsSummary, Partner, ProjectSummary, SiteInfo, TeamMember, Testimonial } from "@/lib/types";
 
 interface HomeData {
   site: SiteInfo;
@@ -29,11 +34,13 @@ function splitHeading(text: string): { light: string; bold: string } {
 }
 
 export default async function HomePage() {
-  const [data, team, allProjects, serviceRows] = await Promise.all([
+  const [data, team, allProjects, serviceRows, testimonials, pics] = await Promise.all([
     getPublicOr<HomeData>("/home", { site: FALLBACK_SITE, news: [], projects: [], partners: [] }),
     getPublicOr<TeamMember[]>("/team", []),
     getPublicOr<ProjectSummary[]>("/projects", []),
     getPublicOr<ServiceRow[]>("/services", []),
+    getPublicOr<Testimonial[]>("/testimonials", []),
+    getSiteImages(),
   ]);
   const services = servicesFrom(serviceRows);
   const { site, news, projects, partners } = data;
@@ -45,7 +52,8 @@ export default async function HomePage() {
     completed > 0
       ? { value: completed, label: "water projects completed", title: "Our progress", text: `Projects completed so far, out of ${allProjects.length} we have published.` }
       : { value: ongoing, label: "areas of work in progress", title: "Our work today", text: "Areas of work the program is running now. Open each one to read more." };
-  const partnerLogos = partners.filter((p) => p.logo);
+  // Partners for the badges and the logo strips; those with a logo first.
+  const marks = [...partners].sort((a, b) => Number(!a.logo) - Number(!b.logo)).map((p) => ({ id: p.id, name: p.name, logo: p.logo }));
 
   // Hero slides: the program itself, then the latest stories and another project.
   const slides: HeroSlide[] = [
@@ -54,16 +62,16 @@ export default async function HomePage() {
       ...splitHeading(site.tagline || site.programName),
       text: site.heroText,
       caption: projects[0]?.title ?? site.programName,
-      image: imageOr(projects[0]?.coverImage, 0),
+      image: imageOr(projects[0]?.coverImage),
       imageAlt: projects[0]?.title ?? "",
       href: projects[0] ? `/projects/${projects[0].slug}` : "/about",
     },
-    ...news.slice(0, 2).map((n, i) => ({
+    ...news.slice(0, 2).map((n) => ({
       eyebrow: "Latest news",
       ...splitHeading(n.title),
       text: n.excerpt,
       caption: formatDate(n.publishedAt),
-      image: imageOr(n.coverImage, n.id + i),
+      image: imageOr(n.coverImage),
       imageAlt: "",
       href: `/news/${n.slug}`,
     })),
@@ -72,12 +80,11 @@ export default async function HomePage() {
       ...splitHeading(p.title),
       text: p.summary,
       caption: STATUS_LABEL[p.status],
-      image: imageOr(p.coverImage, p.id),
+      image: imageOr(p.coverImage),
       imageAlt: p.title,
       href: `/projects/${p.slug}`,
     })),
   ];
-  const featuredPartner = partners.find((p) => p.logo);
 
   const intro = paragraphs(site.aboutText)[0] || site.heroText;
 
@@ -86,7 +93,6 @@ export default async function HomePage() {
       <HeroSlider
         slides={slides}
         programName={site.programName}
-        partner={featuredPartner?.logo ? { name: featuredPartner.name, logo: featuredPartner.logo } : null}
       />
 
       {/* Red cube band: introduction with the big letter, plus the latest story */}
@@ -108,7 +114,7 @@ export default async function HomePage() {
             </div>
             {lead && (
               <div className="flex max-w-full flex-[0_0_342px] flex-col bg-[rgba(2,62,125,.88)] p-5" {...reveal(1, "right")}>
-                <img src={imageOr(lead.coverImage, lead.id)} alt="" className="block h-[222px] w-[157px] object-cover" />
+                <Img src={imageOr(lead.coverImage)} alt="" sizes="320px" className="float-card block h-[222px] w-[157px] object-cover" />
                 <h2 className="mt-[22px] text-[18px] font-bold leading-[1.3]">{lead.title}</h2>
                 <p className="font-text mt-2.5 text-[15.5px] leading-[1.27]">
                   {formatDate(lead.publishedAt)}
@@ -137,8 +143,8 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Our services: the program's four pillars, each linking to its full explanation on About */}
-      <ServicesSection services={services} />
+      {/* Our services: the program's intervention domains, each linking to its full explanation on About */}
+      <ServicesSection services={services} photo={pictureOf(pics, "home.services")} />
 
       {/* Our work: the projects as a large index with a photo preview (see ProjectsShowcase) */}
       {projects.length > 0 && (
@@ -162,6 +168,8 @@ export default async function HomePage() {
       )}
 
       {team.length > 0 && <TeamCarousel team={team} />}
+
+      <TestimonialsCarousel items={testimonials} />
 
       {/* Vision + blue quarter circle with the number of completed projects */}
       {(site.vision || stat.value > 0) && (
@@ -206,22 +214,15 @@ export default async function HomePage() {
           <div className="relative mx-auto flex max-w-[1172px] flex-wrap items-stretch px-4 lg:min-h-[685px]">
             {/* Clean framed photo of PH staff with partner representatives, with a logo badge */}
             <div className="relative flex flex-[0_0_450px] items-end pb-[78px] max-lg:order-2 max-lg:flex-[1_1_100%] max-lg:justify-center max-lg:pb-24" {...reveal(0, "left")}>
-              <figure className="relative w-full max-w-[410px]">
-                <img
-                  src="/photos/field/school-welcome-1.jpg"
+              <figure className="float-card relative w-full max-w-[410px]">
+                <Img
+                  src={pictureOf(pics, "home.partners")}
                   alt="Visitors and staff welcomed by pupils at a school"
                   className="block aspect-[4/5] w-full rounded-[16px] border-[8px] border-white object-cover shadow-[0_36px_70px_-24px_rgba(0,20,60,.7)]"
                 />
-                {partnerLogos.length > 0 && (
-                  <figcaption className="pop-chip absolute -bottom-9 -right-6 rounded-[12px] bg-white px-4 pb-3 pt-2.5 text-navy shadow-[0_18px_40px_-14px_rgba(0,20,60,.55)] max-sm:right-2">
-                    <span className="block text-[12px] font-semibold text-muted">In partnership with</span>
-                    <span className="mt-2 flex items-center gap-4">
-                      {partnerLogos.slice(0, 3).map((p) => (
-                        <img key={p.id} src={p.logo!} alt={p.name} className="h-8 w-auto max-w-[130px] object-contain" />
-                      ))}
-                    </span>
-                  </figcaption>
-                )}
+                <figcaption className="mt-6">
+                  <PartnerBadge partners={marks} />
+                </figcaption>
               </figure>
             </div>
 
@@ -239,24 +240,20 @@ export default async function HomePage() {
                 Join the organisations that already fund, build and maintain this work with us.
               </p>
 
-              {/* White card, like ALU's intake card */}
-              <Link
-                href="/partners"
-                className="pop-chip mt-[38px] block w-full max-w-[674px] rounded-[14px] bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_58%,#dfe6ec_100%)] px-[14px] pb-[18px] pt-[13px] text-navy"
-              >
-                <span className="block text-[20px] font-medium leading-[1.15]">Our partners</span>
-                <span className="block text-[14px] font-bold leading-[1.2]">
-                  {partners.length} {partners.length === 1 ? "organisation" : "organisations"}
-                </span>
-                <span className="mt-1.5 block text-[15px] leading-[1.35] text-[#1d3f73]">
-                  {listNames(partners.map((p) => p.name))}
-                </span>
-                <span className="mt-2.5 block text-[10.5px] font-bold leading-[1.15] text-accent">
-                  See what each partner does
-                  <br />
-                  on the Partners page
-                </span>
-              </Link>
+              {/* Who we work with: names and a link (the logos are in the strip further down) */}
+              <div className="mt-[38px] w-full max-w-[674px] border-t border-white/25 pt-5">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[20px] font-medium leading-[1.15]">Our partners</p>
+                    <p className="mt-0.5 text-[13.5px] text-white/80">
+                      {partners.length} {partners.length === 1 ? "organisation" : "organisations"}: {listNames(partners.map((p) => p.name))}
+                    </p>
+                  </div>
+                  <Link href="/partners" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-bold text-navy transition-colors hover:bg-sky">
+                    See each partner <Chevron size={9} />
+                  </Link>
+                </div>
+              </div>
 
               {/* Notice strip, like ALU's "IMPORTANT" box */}
               <p className="mt-[30px] flex w-full max-w-[650px] items-center gap-2.5 rounded-[10px] bg-white px-2.5 py-[7px] text-[12px] leading-[1.1] text-navy">
@@ -294,7 +291,7 @@ export default async function HomePage() {
                 <Link href={`/news/${news[0].slug}`} className="group block">
                   <span className="relative block">
                     <span aria-hidden="true" className="absolute -bottom-4 -right-4 left-10 top-10 bg-[#cfe5f0] sm:-bottom-6 sm:-right-6" />
-                    <img src={imageOr(news[0].coverImage, news[0].id)} alt="" className="relative block aspect-[4/3] w-full object-cover" />
+                    <Img src={imageOr(news[0].coverImage)} alt="" className="float-card relative block aspect-[4/3] w-full object-cover" />
                   </span>
                   <span className="mt-10 block text-[13px] text-muted">{formatDate(news[0].publishedAt)}</span>
                   <span className="font-display mt-2 block max-w-[30ch] text-[27px] font-medium leading-[1.18] text-navy transition-colors group-hover:text-accent sm:text-[31px]">
@@ -314,7 +311,7 @@ export default async function HomePage() {
                     {news.slice(1, 4).map((n) => (
                       <li key={n.id}>
                         <Link href={`/news/${n.slug}`} className="group grid grid-cols-[112px_minmax(0,1fr)] items-start gap-5 sm:grid-cols-[150px_minmax(0,1fr)]">
-                          <img src={imageOr(n.coverImage, n.id)} alt="" className="block aspect-[4/3] w-full object-cover" />
+                          <Img src={imageOr(n.coverImage)} alt="" sizes="(max-width: 640px) 120px, 300px" className="float-card block aspect-[4/3] w-full object-cover" />
                           <span>
                             <span className="font-display block text-[18px] font-medium leading-[1.25] text-navy transition-colors group-hover:text-accent">{n.title}</span>
                             {n.excerpt && <span className="mt-2 text-[13.5px] leading-[1.55] text-grey line-clamp-2 max-sm:hidden">{n.excerpt}</span>}
@@ -330,11 +327,36 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Partners' logos gliding past, between the news and "Our stories" */}
+      {partners.length > 0 && (
+        <section aria-labelledby="partner-strip-heading" className="relative overflow-hidden bg-mist py-16 sm:py-20">
+          <span aria-hidden="true" className="team-ripple absolute -right-24 -top-28 h-80 w-80 rounded-full border border-accent/15" />
+          <span aria-hidden="true" className="team-ripple team-ripple-2 absolute -right-40 -top-44 h-[28rem] w-[28rem] rounded-full border border-accent/10" />
+          <div className="relative mx-auto flex max-w-[1132px] flex-wrap items-end justify-between gap-6 px-4" {...reveal(0)}>
+            <div>
+              <p className="text-[13px] font-semibold text-accent">Together for safe water</p>
+              <h2 id="partner-strip-heading" className="font-display mt-1 text-[32px] font-normal leading-[1.1] text-navy sm:text-[38px]">
+                Our partners
+              </h2>
+              <p className="mt-3 max-w-[58ch] text-[15px] leading-[1.6] text-muted">
+                The organisations that fund, build and maintain this work with us. Choose a logo to see what each partner does.
+              </p>
+            </div>
+            <Link href="/partners" className="btn-primary inline-flex min-h-12 items-center gap-3 px-7 text-[14px] font-semibold">
+              Meet our partners <Chevron size={10} />
+            </Link>
+          </div>
+          <div className="relative mt-10" {...reveal(1)}>
+            <PartnerMarquee partners={marks} />
+          </div>
+        </section>
+      )}
+
       {/* Stories + questions */}
       <section className="flex flex-wrap">
         <div className="relative flex min-h-[393px] flex-[0_1_60%] flex-wrap items-start justify-between gap-6 overflow-hidden bg-deep px-[70px] pb-12 pt-[70px] max-lg:flex-[1_1_100%] max-lg:items-end max-md:px-6">
           {/* Full photo behind the section (like ALU), tinted deep water-blue so the white text reads */}
-          <img src="/photos/field/visitor-at-tap.jpg" alt="" aria-hidden="true" className="water-drift pointer-events-none absolute inset-0 h-full w-full object-cover object-[50%_30%]" />
+          <Img src={pictureOf(pics, "home.stories")} alt="" aria-hidden="true" className="water-drift pointer-events-none absolute inset-0 h-full w-full object-cover object-[50%_30%]" />
           <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(1,42,74,.78)_0%,rgba(2,62,125,.55)_45%,rgba(3,105,161,.35)_100%)]" />
           <div className="relative mb-[30px] self-end" {...reveal(0, "left")}>
             <h2 className="font-display text-[44px] font-normal leading-[1] text-white [text-shadow:0_2px_18px_rgba(0,20,50,.45)]">
@@ -353,10 +375,10 @@ export default async function HomePage() {
             href={lead ? `/news/${lead.slug}` : "/news"}
             aria-label={lead ? `Read: ${lead.title}` : "Read our stories"}
             {...reveal(1, "zoom")}
-            className="zoom-host relative flex h-64 w-[342px] max-w-full items-center justify-center border-8 border-white bg-white shadow-[0_30px_50px_rgba(0,0,0,.28)]"
+            className="zoom-host float-card relative flex h-64 w-[342px] max-w-full items-center justify-center border-8 border-white bg-white shadow-[0_30px_50px_rgba(0,0,0,.28)]"
           >
             <span className="zoom absolute inset-0">
-              <img src={imageOr(lead?.coverImage, 0)} alt="" className="block h-full w-full object-cover" />
+              <Img src={imageOr(lead?.coverImage)} alt="" sizes="342px" className="block h-full w-full object-cover" />
             </span>
             <span className="relative flex h-[84px] w-[84px] items-center justify-center rounded-full border-[3px] border-white bg-navy/55 shadow-[0_6px_18px_rgba(0,0,0,.3)]">
               <svg width="24" height="26" viewBox="0 0 24 26" aria-hidden="true">

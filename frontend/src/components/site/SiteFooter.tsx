@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { paragraphs } from "@/lib/format";
+import { paragraphs, phoneNumbers } from "@/lib/format";
 import type { SiteInfo } from "@/lib/types";
 import { Facebook, LinkedIn, Pin, Triangle, XLogo } from "./icons";
 import { Logo } from "./Logo";
@@ -24,7 +24,7 @@ export function SiteFooter({ site }: { site: SiteInfo }) {
       />
       <div className="relative mx-auto max-w-[1152px] px-4 py-[72px]">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/40 px-2.5 pb-[18px]">
-          <Logo dropInner="#0c3a78" showDot={false} />
+          <Logo size="lg" />
           {socials.length > 0 && (
             <ul className="flex gap-3.5">
               {socials.map((s) => (
@@ -45,7 +45,7 @@ export function SiteFooter({ site }: { site: SiteInfo }) {
             {about && <p className="mt-3.5">{about}</p>}
             <ul className="mt-10">
               <li className={rowClass}><Link href="/about" className={linkClass}>About the program</Link></li>
-              <li className={rowClass}><Link href="/about#team" className={linkClass}>Our team</Link></li>
+              <li className={rowClass}><Link href="/team" className={linkClass}>Our team</Link></li>
               <li className={rowClass}><Link href="/dashboard" className={linkClass}>Staff dashboard</Link></li>
             </ul>
           </div>
@@ -57,26 +57,40 @@ export function SiteFooter({ site }: { site: SiteInfo }) {
               <li className={rowClass}><Link href="/news" className={linkClass}>News</Link></li>
               <li className={rowClass}><Link href="/gallery" className={linkClass}>Photo gallery</Link></li>
               <li className={rowClass}><Link href="/partners" className={linkClass}>Partners</Link></li>
+              <li className={rowClass}><Link href="/certificates" className={linkClass}>Certificates</Link></li>
               <li className={rowClass}><Link href="/contact" className={linkClass}>Contact</Link></li>
             </ul>
           </div>
 
           <div className="min-w-0 flex-[0_1_236px] sm:ml-auto">
             <h2 className="font-sans text-[14px] font-semibold text-white">Contact</h2>
-            {(site.address || site.phone) && (
+            {(site.address || site.phone || site.location) && (
               <>
                 <p className="mt-[26px] flex items-center gap-2.5 font-sans text-[13px] font-semibold text-white">
                   <Pin /> Our office
                 </p>
                 <p className="mt-4">
+                  {site.location && (
+                    <>
+                      <a href={site.mapLink || "/contact#find-us"} target={site.mapLink ? "_blank" : undefined} rel={site.mapLink ? "noopener noreferrer" : undefined} className={`${linkClass} font-semibold`}>
+                        {site.location}
+                      </a>
+                      <br />
+                    </>
+                  )}
                   {site.address}
                   {site.address && site.phone && <br />}
                   {site.phone && (
                     <>
                       Phone:{" "}
-                      <a href={`tel:${site.phone.replace(/\s/g, "")}`} className={linkClass}>
-                        {site.phone}
-                      </a>
+                      {phoneNumbers(site.phone).map((n, i) => (
+                        <span key={n.href}>
+                          {i > 0 && <br />}
+                          <a href={n.href} className={linkClass}>
+                            {n.label}
+                          </a>
+                        </span>
+                      ))}
                     </>
                   )}
                 </p>
@@ -101,8 +115,9 @@ export function SiteFooter({ site }: { site: SiteInfo }) {
           </div>
         </div>
       </div>
-      <div className="relative bg-accent px-2.5 py-4 text-[11px] font-semibold text-white">
-        © {new Date().getFullYear()} {site.programName}. All Rights Reserved.
+      <div className="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-1 bg-accent px-2.5 py-4 text-[11px] font-semibold text-white">
+        <span>© {new Date().getFullYear()} {site.programName}. All Rights Reserved.</span>
+        <span className="font-mono text-[10.5px] font-normal tracking-[0.04em] text-white/55">POWERED by COD RW</span>
       </div>
     </footer>
   );

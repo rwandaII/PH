@@ -40,16 +40,13 @@ for (let i = 0, y0 = -40; y0 < H + 40; i++, y0 += GAP) {
   sets[i % SETS.length].push(`<path d="M${pts.join("L")}"/>`);
 }
 
-let css = "";
+// The lines are drawn still. Animating them inside the SVG made the browser redraw every path on
+// every frame (slow on long pages); instead TechLines.tsx moves the whole picture as one layer
+// with a GPU transform, which costs almost nothing.
 let body = "";
-SETS.forEach(([travel, bob, rise], k) => {
-  // the outer group travels sideways; the inner group rises and falls
-  css +=
-    `.t${k}{animation:t${k} ${travel}s linear infinite}@keyframes t${k}{to{transform:translateX(-${PERIOD}px)}}` +
-    `.b${k}{animation:b${k} ${bob}s ease-in-out infinite alternate}@keyframes b${k}{from{transform:translateY(-${rise}px)}to{transform:translateY(${rise}px)}}`;
-  body += `<g class="t${k}"><g class="b${k}">${sets[k].join("")}</g></g>`;
+SETS.forEach((_set, k) => {
+  body += `<g>${sets[k].join("")}</g>`;
 });
-css += "@media (prefers-reduced-motion:reduce){g{animation:none!important}}";
 
 // Two colourings of the same lines:
 //  - light: a blue only a little lighter than the background, for blue backgrounds (Home, team,
@@ -62,7 +59,6 @@ const TONES = {
 for (const [name, tone] of Object.entries(TONES)) {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMaxYMid slice">` +
-    `<style>${css}</style>` +
     `<g fill="none" stroke="${tone.stroke}" stroke-opacity="${tone.opacity}" stroke-width="${tone.width}" stroke-linecap="round">${body}</g></svg>`;
   writeFileSync(new URL(`../public/patterns/water-lines-${name}.svg`, import.meta.url), svg);
   console.log(`water-lines-${name}.svg: ${Math.round(svg.length / 1024)} KB, ${Math.round(gzipSync(svg).length / 1024)} KB compressed`);

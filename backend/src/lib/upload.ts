@@ -28,6 +28,29 @@ export const imageUpload = multer({
   },
 }).single('image');
 
+const VIDEO_TYPES: Record<string, string> = {
+  'video/mp4': '.mp4',
+  'video/webm': '.webm',
+  'video/quicktime': '.mov',
+  'video/ogg': '.ogv',
+};
+export const MAX_VIDEO_BYTES = 300 * 1024 * 1024;
+
+/** Accepts one video in the multipart field named "video" (MP4, WebM, MOV or OGG, up to 300 MB). */
+export const videoUpload = multer({
+  storage: multer.diskStorage({
+    destination: config.uploadDir,
+    filename: (_req, file, cb) => {
+      cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${VIDEO_TYPES[file.mimetype]}`);
+    },
+  }),
+  limits: { fileSize: MAX_VIDEO_BYTES, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (VIDEO_TYPES[file.mimetype]) cb(null, true);
+    else cb(new HttpError(400, 'Only MP4, WebM, MOV or OGG videos can be uploaded'));
+  },
+}).single('video');
+
 /** Public URL path stored in the database for an uploaded file. */
 export function publicPath(filename: string): string {
   return `/uploads/${filename}`;

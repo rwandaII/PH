@@ -1,5 +1,6 @@
 "use client";
 
+import { Img } from "@/components/site/Img";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
@@ -58,13 +59,14 @@ export function PhotoViewer({
                 setOpen(i);
               }}
               aria-label={`Open photo ${i + 1} of ${photos.length}: ${label}`}
-              className={`zoom-host group relative block w-full overflow-hidden ${dark ? "bg-white/10" : "bg-mist"}`}
+              className="zoom-host group relative block w-full"
             >
-              <span className="zoom block">
-                <img
+              <span className={`zoom block ${dark ? "bg-white/10" : "bg-mist"}`}>
+                <Img
                   src={src}
                   alt=""
                   loading="lazy"
+                  sizes={layout === "story" && i === 0 && photos.length > 2 ? "(max-width: 768px) 100vw, 860px" : "(max-width: 640px) 50vw, 420px"}
                   className={`block w-full object-cover ${layout === "story" && i === 0 && photos.length > 2 ? "aspect-[16/9]" : "aspect-[4/3]"}`}
                 />
               </span>
@@ -94,7 +96,7 @@ export function PhotoViewer({
             </button>
           </div>
           <div className="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-6 sm:px-16">
-            <img key={photos[open]} src={photos[open]} alt="" className="fade-in max-h-full max-w-full object-contain" />
+            <Img key={photos[open]} src={photos[open]} alt="" sizes="100vw" loading="eager" className="fade-in max-h-full max-w-full object-contain" />
             {photos.length > 1 && (
               <>
                 <button type="button" onClick={() => go(-1)} aria-label="Previous photo" className="absolute left-1 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center bg-black/30 hover:bg-white/15 sm:left-3">

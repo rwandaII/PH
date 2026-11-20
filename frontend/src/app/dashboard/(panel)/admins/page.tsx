@@ -1,5 +1,6 @@
 "use client";
 
+import { PasswordInput } from "@/components/dashboard/PasswordInput";
 import { useEffect, useState } from "react";
 import { useSession } from "@/components/dashboard/Session";
 import { btnPrimary, ConfirmDelete, formatShortDate, labelClass, Loading, Notice, PageHead } from "@/components/dashboard/ui";
@@ -54,7 +55,11 @@ export default function AdminsPage() {
       <label htmlFor={`a-${name}`} className={labelClass}>
         {label}
       </label>
-      <input id={`a-${name}`} name={name} type={type} autoComplete={autoComplete} required className="field" aria-invalid={!!fieldErrors[name]} aria-describedby={fieldErrors[name] ? `a-${name}-error` : undefined} />
+      {type === "password" ? (
+        <PasswordInput id={`a-${name}`} name={name} autoComplete={autoComplete} required aria-invalid={!!fieldErrors[name]} aria-describedby={fieldErrors[name] ? `a-${name}-error` : undefined} />
+      ) : (
+        <input id={`a-${name}`} name={name} type={type} autoComplete={autoComplete} required className="field" aria-invalid={!!fieldErrors[name]} aria-describedby={fieldErrors[name] ? `a-${name}-error` : undefined} />
+      )}
       {fieldErrors[name] && (
         <p id={`a-${name}-error`} className="mt-1 text-[13px] text-danger">
           {fieldErrors[name]}

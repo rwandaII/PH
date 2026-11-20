@@ -15,8 +15,11 @@ const NAV = [
   { href: "/dashboard/team", label: "Team members" },
   { href: "/dashboard/partners", label: "Partners" },
   { href: "/dashboard/services", label: "Services" },
+  { href: "/dashboard/certificates", label: "Certificates" },
+  { href: "/dashboard/pictures", label: "Pictures & sliders" },
   { href: "/dashboard/site", label: "About & contact info" },
   { href: "/dashboard/comments", label: "Comments" },
+  { href: "/dashboard/testimonials", label: "What people say" },
   { href: "/dashboard/messages", label: "Messages" },
   { href: "/dashboard/admins", label: "Admin accounts" },
   { href: "/dashboard/account", label: "My password" },
@@ -25,7 +28,7 @@ const NAV = [
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { admin, unread, pendingComments } = useSession();
+  const { admin, unread, pendingComments, pendingTestimonials } = useSession();
   const [open, setOpen] = useState(false);
 
   const isActive = (href: string) =>
@@ -40,7 +43,7 @@ export function Sidebar() {
     <aside className="bg-navy text-white lg:sticky lg:top-0 lg:h-screen lg:w-[250px] lg:flex-none lg:overflow-y-auto">
       <div className="flex items-center justify-between px-5 py-5">
         <Link href="/dashboard" aria-label="Dashboard overview">
-          <Logo />
+          <Logo size="sm" />
         </Link>
         <button
           type="button"
@@ -70,6 +73,9 @@ export function Sidebar() {
                 {item.label}
                 {item.href === "/dashboard/messages" && unread > 0 && (
                   <span className="bg-accent px-2 py-px text-[11px] font-bold text-white">{unread} new</span>
+                )}
+                {item.href === "/dashboard/testimonials" && pendingTestimonials > 0 && (
+                  <span className="bg-accent px-2 py-px text-[11px] font-bold text-white">{pendingTestimonials} waiting</span>
                 )}
                 {item.href === "/dashboard/comments" && pendingComments > 0 && (
                   <span className="bg-accent px-2 py-px text-[11px] font-bold text-white">{pendingComments} waiting</span>

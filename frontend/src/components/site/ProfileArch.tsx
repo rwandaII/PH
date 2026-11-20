@@ -1,9 +1,10 @@
+import { Img } from "@/components/site/Img";
 import type { TeamMember } from "@/lib/types";
 
 /**
  * Team member picture on their own page: a blue arch with the person in front of it, head
  * rising above the arch (as on ALU's programme page). A PNG with the background removed stands
- * in front of the arch; any other photo fills the arch; with no photo, a silhouette stands in.
+ * in front of the arch; any other photo fills the arch; with no photo, the programme's logo.
  *
  * When the page opens, a drop of water falls onto the top of the picture and splashes
  * (CSS in globals.css, "Profile arch"; skipped when the visitor prefers reduced motion).
@@ -19,15 +20,11 @@ export function ProfileArch({ member }: { member: TeamMember }) {
       <span aria-hidden="true" className={`profile-arch-shape absolute inset-x-0 bottom-0 rounded-t-[999px] bg-band ${fills ? "top-0" : "top-[17%]"}`} />
 
       {fills ? (
-        <img src={photo} alt={`Photo of ${member.name}`} className="relative block aspect-[4/5] w-full rounded-t-[999px] border-[10px] border-b-0 border-band object-cover" />
+        <Img src={photo} alt={`Photo of ${member.name}`} className="relative block aspect-[4/5] w-full rounded-t-[999px] border-[10px] border-b-0 border-band object-cover" />
       ) : cutout ? (
-        <img src={photo} alt={`Photo of ${member.name}`} className="relative mx-auto block w-[86%]" />
+        <Img src={photo} alt={`Photo of ${member.name}`} className="relative mx-auto block w-[86%]" />
       ) : (
-        <svg viewBox="0 0 340 400" role="img" aria-label={`${member.name} (no photo yet)`} className="relative block w-full">
-          {/* head above the arch, shoulders inside it */}
-          <circle cx="170" cy="112" r="78" fill="#e8ddd5" />
-          <path d="M42 400C42 300 98 232 170 232s128 68 128 168Z" fill="#f5f2ee" />
-        </svg>
+        <Img src="/logo/ph-logo.png" alt={`${member.name} (no photo yet)`} sizes="320px" className="relative mx-auto block w-[82%] pb-10 pt-16" />
       )}
 
       {/* Water drop that falls onto the top of the picture, then splashes */}

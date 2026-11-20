@@ -1,4 +1,5 @@
 import cookieParser from 'cookie-parser';
+import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -15,6 +16,8 @@ export function createApp() {
   // Images are shown on the Next.js site (another origin), so allow cross-origin loading.
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cors({ origin: config.corsOrigins, credentials: true }));
+  // Smaller answers for slow connections (JSON and text; pictures are already compressed).
+  app.use(compression({ threshold: 1024 }));
   app.use(express.json({ limit: '3mb' }));
   app.use(cookieParser());
 

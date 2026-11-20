@@ -1,5 +1,6 @@
 "use client";
 
+import { Img } from "@/components/site/Img";
 import Link from "next/link";
 import { useState } from "react";
 import { STATUS_LABEL } from "@/lib/format";
@@ -48,12 +49,12 @@ export function ProjectsShowcase({ projects }: { projects: ProjectSummary[] }) {
 
         <div aria-live="polite">
           {/* Same framed look as every other project photo (see FramedPhoto) */}
-          <div className="relative pb-7 pr-7">
+          <div className="float-card relative pb-7 pr-7">
             <span aria-hidden="true" className="absolute bottom-0 left-12 right-0 top-12 bg-band" />
             <span aria-hidden="true" className="absolute bottom-0 right-0 h-20 w-20 opacity-80 [background-image:url(/patterns/cubes.svg)] [background-size:24.25px_42px]" />
-            <img
+            <Img
               key={current.id}
-              src={imageOr(current.coverImage, current.id)}
+              src={imageOr(current.coverImage)}
               alt=""
               className={`relative block aspect-[4/3] w-full object-cover shadow-[0_24px_44px_-24px_rgba(0,30,70,.6)] ${touched ? "fade-in" : ""}`}
             />
@@ -80,9 +81,9 @@ export function ProjectsShowcase({ projects }: { projects: ProjectSummary[] }) {
         {projects.map((p) => (
           <li key={p.id}>
             <Link href={`/projects/${p.slug}`} className="block">
-              <span className="relative block pb-5 pr-5">
+              <span className="float-card relative block pb-5 pr-5">
                 <span aria-hidden="true" className="absolute bottom-0 left-8 right-0 top-8 bg-band" />
-                <img src={imageOr(p.coverImage, p.id)} alt="" className="relative block aspect-[3/2] w-full object-cover" />
+                <Img src={imageOr(p.coverImage)} alt="" className="relative block aspect-[3/2] w-full object-cover" />
               </span>
               <span className="mt-4 flex items-baseline justify-between gap-4">
                 <span className="font-display text-[23px] leading-[1.2] text-navy">{p.title}</span>

@@ -9,10 +9,10 @@ const NAV = [
   { href: "/about", label: "About us" },
   { href: "/projects", label: "Projects" },
   { href: "/news", label: "News" },
-  { href: "/gallery", label: "Gallery" },
   { href: "/partners", label: "Partners" },
-  { href: "/about#team", label: "Our team" },
+  { href: "/team", label: "Our team" },
 ];
+// Gallery and Certificates are linked from the footer and the pages that mention them.
 
 export function SiteHeader({ programName }: { programName: string }) {
   const pathname = usePathname();
@@ -26,8 +26,8 @@ export function SiteHeader({ programName }: { programName: string }) {
   return (
     <header className="relative z-30 bg-navy">
       <div className="flex flex-wrap items-stretch justify-between pl-4 sm:pl-12">
-        <Link href="/" aria-label={`${programName}, home`} className="flex items-center py-3.5" onClick={() => setOpen(false)}>
-          <Logo />
+        <Link href="/" aria-label={`${programName}, home`} className="flex items-center py-2.5" onClick={() => setOpen(false)}>
+          <Logo compactOnPhones />
         </Link>
 
         <div className="flex items-stretch">
@@ -44,7 +44,7 @@ export function SiteHeader({ programName }: { programName: string }) {
                   href={item.href}
                   onClick={() => setOpen(false)}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.02em] text-white hover:text-[#90e0ef] lg:min-h-[70px] lg:py-0 ${
+                  className={`nav-link relative flex items-center whitespace-nowrap px-6 py-3 text-[13px] font-semibold uppercase tracking-[0.02em] text-white hover:text-[#90e0ef] lg:min-h-[70px] lg:px-5 lg:py-0 xl:px-6 ${
                     active ? "lg:border-b-[3px] lg:border-accent lg:pt-[3px]" : ""
                   }`}
                 >

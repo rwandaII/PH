@@ -1,17 +1,34 @@
-/** "HP / HYDRAULIC PROGRAM" wordmark with a water-drop mark, white on navy. */
-export function Logo({ dropInner = "#002e6d", showDot = true }: { dropInner?: string; showDot?: boolean }) {
+import { Img } from "@/components/site/Img";
+/**
+ * The programme's emblem ("Diocese de Ruhengeri – Programme Hydraulique", from its documents)
+ * with the name beside it, white on navy. `lg` is the footer version, `sm` the dashboard sidebar.
+ */
+const SIZES = {
+  sm: { mark: "h-[40px]", name: "text-[12px]", sub: "text-[10px]" },
+  md: { mark: "h-[50px]", name: "text-[14px]", sub: "text-[11px]" },
+  lg: { mark: "h-[74px]", name: "text-[17px]", sub: "text-[12.5px]" },
+};
+
+export function Logo({
+  size = "md",
+  showName = true,
+  compactOnPhones = false,
+}: {
+  size?: keyof typeof SIZES;
+  showName?: boolean;
+  /** Header: on narrow phones show the emblem only, so the menu fits on one line. */
+  compactOnPhones?: boolean;
+}) {
+  const s = SIZES[size];
   return (
-    <span className="flex items-center gap-2.5 text-white">
-      <svg width="26" height="32" viewBox="0 0 30 36" aria-hidden="true">
-        <path d="M15 1C15 1 2 15.5 2 23a13 13 0 0 0 26 0C28 15.5 15 1 15 1Z" fill="#ffffff" />
-        <path d="M15 13c0 0-6 6.6-6 10.4a6 6 0 0 0 12 0C21 19.6 15 13 15 13Z" fill={dropInner} />
-        {showDot && <circle cx="15" cy="23.5" r="2.4" fill="#48cae4" />}
-      </svg>
-      <span className="text-[25px] font-extrabold leading-none tracking-[-0.02em]">HP</span>
-      <span className="flex flex-col text-[9px] font-semibold leading-[1.1] tracking-[0.06em]">
-        <span>HYDRAULIC</span>
-        <span>PROGRAM</span>
-      </span>
+    <span className="logo flex items-center gap-3 text-white">
+      <Img src="/logo/ph-logo-on-dark.png" alt="" width={347} height={267} sizes="128px" priority className={`logo-mark block w-auto flex-none ${s.mark}`} />
+      {showName && (
+        <span className={`${compactOnPhones ? "hidden min-[520px]:flex" : "flex"} flex-col whitespace-nowrap leading-none`}>
+          <span className={`font-extrabold tracking-[0.02em] ${s.name}`}>HYDRAULIC PROGRAM</span>
+          <span className={`mt-1 font-medium text-white/75 ${s.sub}`}>Diocese of Ruhengeri</span>
+        </span>
+      )}
     </span>
   );
 }

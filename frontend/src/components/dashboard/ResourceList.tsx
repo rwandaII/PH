@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { STATUS_LABEL } from "@/lib/format";
 import { api, ApiError } from "@/lib/dashboard/api";
 import { RESOURCES, type ResourceDef } from "@/lib/dashboard/resources";
+import { TEAM_CATEGORY_LABEL, type TeamCategory } from "@/lib/team-categories";
 import type { ProjectStatus } from "@/lib/types";
 import { btnPrimary, ConfirmDelete, formatShortDate, Loading, Notice, PageHead } from "./ui";
 
@@ -134,8 +135,10 @@ function Cell({ kind, value, href }: { kind?: string; value: unknown; href?: str
       );
     case "date":
       return <span className="text-muted">{formatShortDate(value as string) || "Not yet"}</span>;
+    case "teamCategory":
+      return <span className="text-muted">{TEAM_CATEGORY_LABEL[value as TeamCategory] ?? "Other staff"}</span>;
     case "status":
-      return <span>{STATUS_LABEL[value as ProjectStatus] ?? String(value)}</span>;
+      return <span>{STATUS_LABEL[value as ProjectStatus] ?? String(value ?? "").replace(/^./, (c) => c.toUpperCase())}</span>;
     default:
       return <span className="text-muted">{String(value ?? "")}</span>;
   }

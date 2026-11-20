@@ -1,3 +1,7 @@
+import { Img } from "@/components/site/Img";
+import { HeaderSlides } from "@/components/site/HeaderSlides";
+import { VideoPlayer } from "@/components/site/VideoPlayer";
+import { hasVideo } from "@/lib/video";
 import type { Metadata } from "next";
 import { TechLines } from "@/components/site/TechLines";
 import Link from "next/link";
@@ -17,6 +21,12 @@ import type { NewsComment, NewsItem, NewsSummary } from "@/lib/types";
 type Props = { params: Promise<{ slug: string }> };
 
 const getItem = async (slug: string) => getPublicOr<NewsItem | null>(`/news/${encodeURIComponent(slug)}`, null);
+
+/** Build every published page ahead of time so it opens instantly; new ones are built on first visit. */
+export async function generateStaticParams() {
+  const { items } = await getPublicOr<{ items: { slug: string }[] }>("/news?page=1&limit=50", { items: [] });
+  return items.map((n) => ({ slug: n.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const item = await getItem((await params).slug);
@@ -38,13 +48,15 @@ export default async function NewsArticlePage({ params }: Props) {
   ]);
   if (!item) notFound();
 
-  const cover = imageOr(item.coverImage, item.id);
+  const cover = imageOr(item.coverImage);
   const { text, photos: inText } = splitContent(item.content);
   const photos = [...new Set([...(item.coverImage ? [item.coverImage] : []), ...inText])];
   const minutes = readingMinutes(item.content);
   const more = list.items.filter((n) => n.slug !== item.slug).slice(0, 3);
 
   const nav: PageNavItem[] = [{ id: "story", label: "The story" }];
+  const withVideo = hasVideo(item);
+  if (withVideo) nav.push({ id: "video", label: "Video" });
   if (photos.length > 0) nav.push({ id: "photos", label: `Photos (${photos.length})` });
   nav.push({ id: "comments", label: comments.length > 0 ? `Comments (${comments.length})` : "Comments" });
   if (more.length > 0) nav.push({ id: "more", label: "Keep reading" });
@@ -55,8 +67,8 @@ export default async function NewsArticlePage({ params }: Props) {
 
       {/* Cover: the story's photo across the screen, title on a navy fade */}
       <section className="relative flex min-h-[520px] items-end overflow-hidden bg-navy text-white lg:min-h-[640px]">
-        <img src={cover} alt="" className="hero-bg-in absolute inset-0 h-full w-full object-cover" />
-        <span aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,29,71,.25)_0%,rgba(0,29,71,.15)_35%,rgba(0,29,71,.85)_75%,rgba(0,29,71,.96)_100%)]" />
+        <HeaderSlides images={[cover, ...photos.filter((p) => p !== cover)].slice(0, 6)} controlsClassName="bottom-5 right-5" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,29,71,.25)_0%,rgba(0,29,71,.15)_35%,rgba(0,29,71,.85)_75%,rgba(0,29,71,.96)_100%)]" />
         <TechLines right="soft" />
         <div className="banner-in relative mx-auto w-full max-w-[1172px] px-4 pb-14 pt-32 lg:pb-[120px] lg:pr-[300px]">
           <Link href="/news" className="inline-flex min-h-9 items-center gap-2.5 text-[13.5px] font-semibold text-sky hover:text-white">
@@ -84,6 +96,20 @@ export default async function NewsArticlePage({ params }: Props) {
             </article>
           </div>
         </section>
+
+        {withVideo && (
+          <section id="video" aria-labelledby="video-heading" className="scroll-mt-6 bg-mist">
+            <div className="mx-auto max-w-[1172px] px-4 py-16 lg:py-20 lg:pr-[300px]">
+              <h2 id="video-heading" className="font-display text-[30px] font-normal leading-[1.1] text-navy sm:text-[34px]">
+                Watch the video
+              </h2>
+              <div className="mt-8 grid max-w-[820px] gap-8">
+                {item.videoFile && <VideoPlayer file={item.videoFile} poster={item.coverImage} title={item.title} />}
+                {item.videoUrl && <VideoPlayer link={item.videoUrl} poster={item.coverImage} title={item.title} />}
+              </div>
+            </div>
+          </section>
+        )}
 
         {photos.length > 0 && (
           <section id="photos" className="scroll-mt-6 bg-navy text-white">
@@ -119,7 +145,7 @@ export default async function NewsArticlePage({ params }: Props) {
                   <li key={n.id}>
                     <Link href={`/news/${n.slug}`} className="zoom-host group block">
                       <span className="zoom block overflow-hidden">
-                        <img src={imageOr(n.coverImage, n.id)} alt="" loading="lazy" className="block aspect-[3/2] w-full object-cover" />
+                        <Img src={imageOr(n.coverImage)} alt="" loading="lazy" className="float-card block aspect-[3/2] w-full object-cover" />
                       </span>
                       <span className="mt-4 block text-[12.5px] text-muted">{formatDate(n.publishedAt)}</span>
                       <span className="font-display mt-1.5 block text-[20px] leading-[1.22] text-navy transition-colors group-hover:text-accent">{n.title}</span>

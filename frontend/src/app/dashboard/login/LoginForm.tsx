@@ -1,5 +1,6 @@
 "use client";
 
+import { PasswordInput } from "@/components/dashboard/PasswordInput";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { btnPrimary, Notice } from "@/components/dashboard/ui";
@@ -39,7 +40,7 @@ export function LoginForm() {
         <label htmlFor="password" className="block text-[13px] font-semibold text-navy">
           Password
         </label>
-        <input id="password" name="password" type="password" autoComplete="current-password" required className="field" />
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </div>
       <button type="submit" disabled={busy} className={`${btnPrimary} w-full`}>
         <Chevron />

@@ -59,7 +59,7 @@ export function GalleryBrowser({ albums }: { albums: GalleryAlbum[] }) {
                 {a.kind === "news" ? "Read the story" : "About this project"} <Chevron size={10} />
               </Link>
             </div>
-            <div className="mt-6">
+            <div className="lift-card mt-6">
               <PhotoViewer photos={a.photos} label={a.title} layout="even" />
             </div>
           </li>

@@ -18,6 +18,8 @@ const newsListSelect = {
   excerpt: true,
   coverImage: true,
   publishedAt: true,
+  videoFile: true,
+  videoUrl: true,
 } as const;
 const projectListSelect = {
   id: true,
@@ -149,6 +151,33 @@ publicRouter.post('/news/:slug/comments', commentLimiter, async (req, res) => {
   res.status(201).json({ ok: true, pending: true });
 });
 
+/* ---------- Testimonials: what visitors say about us, shown once staff approve them ---------- */
+
+publicRouter.get('/testimonials', async (_req, res) => {
+  res.json(
+    await prisma.testimonial.findMany({
+      where: { isApproved: true },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+      select: { id: true, name: true, place: true, message: true, createdAt: true },
+    }),
+  );
+});
+
+publicRouter.post('/testimonials', commentLimiter, async (req, res) => {
+  const data = z
+    .object({
+      name: z.string().trim().min(1, 'Name is required').max(120),
+      place: z.string().trim().max(160).default(''),
+      message: z.string().trim().min(5, 'Write a few words about us').max(3000),
+      // Spam trap: a hidden field people never fill in.
+      website: z.string().max(0, 'Spam detected').optional(),
+    })
+    .parse(req.body ?? {});
+  await prisma.testimonial.create({ data: { name: data.name, place: data.place, message: data.message } });
+  res.status(201).json({ ok: true, pending: true });
+});
+
 /* ---------- Gallery: every photo from published stories and projects ---------- */
 
 const photosIn = (html: string) => [...html.matchAll(/<img[^>]*\ssrc="([^"]+)"/g)].map((m) => m[1]);
@@ -210,6 +239,26 @@ publicRouter.post('/track', trackLimiter, async (req, res) => {
 
 publicRouter.get('/services', async (_req, res) => {
   res.json(await prisma.service.findMany({ orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }] }));
+});
+
+publicRouter.get('/certificates', async (_req, res) => {
+  res.json(
+    await prisma.certificate.findMany({
+      where: { isPublished: true },
+      orderBy: [{ sortOrder: 'asc' }, { issuedOn: 'desc' }, { createdAt: 'desc' }],
+      select: { id: true, title: true, kind: true, issuer: true, issuedOn: true, description: true, image: true },
+    }),
+  );
+});
+
+publicRouter.get('/site-images', async (_req, res) => {
+  res.json(
+    await prisma.siteImage.findMany({
+      where: { image: { not: null } },
+      orderBy: [{ place: 'asc' }, { sortOrder: 'asc' }, { id: 'asc' }],
+      select: { id: true, place: true, image: true, caption: true, sortOrder: true },
+    }),
+  );
 });
 
 publicRouter.get('/partners', async (_req, res) => {

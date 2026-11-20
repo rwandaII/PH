@@ -9,6 +9,7 @@ interface SessionValue {
   unread: number;
   /** Comments waiting for approval. */
   pendingComments: number;
+  pendingTestimonials: number;
   refreshUnread: () => void;
 }
 
@@ -29,12 +30,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [failed, setFailed] = useState("");
   const [unread, setUnread] = useState(0);
   const [pendingComments, setPendingComments] = useState(0);
+  const [pendingTestimonials, setPendingTestimonials] = useState(0);
 
   const refreshUnread = useCallback(() => {
-    api<{ unreadMessages: number; pendingComments: number }>("/admin/stats")
+    api<{ unreadMessages: number; pendingComments: number; pendingTestimonials: number }>("/admin/stats")
       .then((s) => {
         setUnread(s.unreadMessages);
         setPendingComments(s.pendingComments);
+        setPendingTestimonials(s.pendingTestimonials ?? 0);
       })
       .catch(() => {});
   }, []);
@@ -60,5 +63,5 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }
   if (!admin) return <p className="px-6 py-24 text-center text-muted">Checking your login…</p>;
 
-  return <SessionContext.Provider value={{ admin, unread, pendingComments, refreshUnread }}>{children}</SessionContext.Provider>;
+  return <SessionContext.Provider value={{ admin, unread, pendingComments, pendingTestimonials, refreshUnread }}>{children}</SessionContext.Provider>;
 }

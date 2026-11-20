@@ -1,5 +1,6 @@
 "use client";
 
+import { Img } from "@/components/site/Img";
 import Link from "next/link";
 import { useState } from "react";
 import { reveal } from "@/lib/reveal";
@@ -47,14 +48,29 @@ export function TeamCarousel({ team }: { team: TeamMember[] }) {
   );
 }
 
+/**
+ * A team member's picture standing free, with no circle or frame: a cut-out photo (transparent
+ * PNG) or the programme's emblem floats on the page with a soft shadow under it; an ordinary
+ * photo gets gently rounded corners. Without a photo, the PH emblem is shown.
+ */
 export function Portrait({ member, size = "md" }: { member: TeamMember; size?: "md" | "lg" }) {
   const big = size === "lg";
+  const photo = member.photo;
+  const free = !photo || /\.png($|\?)/i.test(photo);
+  const box = big ? "h-56 w-48 sm:h-64 sm:w-56" : "h-36 w-32";
   return (
-    <div className={`pop-portrait flex flex-none items-center justify-center rounded-full bg-[#e3e3e3] ${big ? "h-56 w-56 sm:h-64 sm:w-64" : "h-32 w-32"}`}>
-      <img
-        src={member.photo || "/illustrations/avatar.svg"}
-        alt={member.photo ? `Photo of ${member.name}` : ""}
-        className={`block rounded-full bg-band object-cover ${big ? "h-[calc(100%-18px)] w-[calc(100%-18px)]" : "h-[116px] w-[116px]"}`}
+    <div className={`pop-portrait relative flex flex-none items-end justify-center ${box}`}>
+      {/* soft shadow on the ground under a free-standing picture */}
+      {free && <span aria-hidden="true" className="absolute bottom-0 left-1/2 h-3 w-3/4 -translate-x-1/2 rounded-[50%] bg-[#002e6d]/20 blur-[6px]" />}
+      <Img
+        src={photo || "/logo/ph-logo.png"}
+        alt={photo ? `Photo of ${member.name}` : ""}
+        sizes={big ? "260px" : "160px"}
+        className={
+          free
+            ? "relative block max-h-full w-full object-contain drop-shadow-[0_12px_14px_rgba(0,30,70,.28)]"
+            : "relative block h-full w-full rounded-[22px] object-cover shadow-[0_18px_30px_-16px_rgba(0,30,70,.55)]"
+        }
       />
     </div>
   );

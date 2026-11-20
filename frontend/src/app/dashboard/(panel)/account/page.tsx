@@ -1,5 +1,6 @@
 "use client";
 
+import { PasswordInput } from "@/components/dashboard/PasswordInput";
 import { useState } from "react";
 import { btnPrimary, labelClass, Notice, PageHead } from "@/components/dashboard/ui";
 import { Chevron } from "@/components/site/icons";
@@ -41,13 +42,11 @@ export default function AccountPage() {
       <label htmlFor={`p-${name}`} className={labelClass}>
         {label}
       </label>
-      <input
+      <PasswordInput
         id={`p-${name}`}
         name={name}
-        type="password"
         autoComplete={autoComplete}
         required
-        className="field"
         aria-invalid={!!fieldErrors[name]}
         aria-describedby={fieldErrors[name] ? `p-${name}-error` : undefined}
       />

@@ -10,12 +10,10 @@ export interface PageNavItem {
 }
 
 /**
- * The white "On this page" card from ALU's programme pages. It sits where the page puts it
- * (overlapping the bottom of the page header by `overlap`) and does not follow the visitor
- * while they scroll. The section in view is shown in navy. Wide screens only.
- *
- * Wrap everything below the page header in it; `overlap` is how far the card rises into
- * the header.
+ * The white "On this page" card from ALU's programme pages. Every section stays on the page;
+ * the links scroll to them, and the section in view is shown in navy with a dot. The card sits
+ * where the page puts it (overlapping the bottom of the page header by `overlap`) and does not
+ * follow the visitor while they scroll. Wide screens only.
  */
 export function WithPageNav({
   items,
@@ -60,7 +58,7 @@ function PageNavCard({ items, action }: { items: PageNavItem[]; action?: { href:
   return (
     <nav
       aria-label="On this page"
-      className="pointer-events-auto h-fit w-[254px] rounded-br-[60px] bg-white px-[25px] pb-[46px] pt-[50px] shadow-[0_22px_44px_-22px_rgba(0,30,70,.45)]"
+      className="page-nav-card pointer-events-auto h-fit w-[254px] rounded-br-[60px] bg-white px-[25px] pb-[46px] pt-[50px] shadow-[0_22px_44px_-22px_rgba(0,30,70,.45)]"
     >
       <ul>
         {items.map((item, i) => {
@@ -70,9 +68,13 @@ function PageNavCard({ items, action }: { items: PageNavItem[]; action?: { href:
               <a
                 href={`#${item.id}`}
                 aria-current={on ? "location" : undefined}
-                className={`block py-[9px] text-[13px] leading-[1.3] transition-colors ${on ? "font-semibold text-navy" : "text-[#6f6f6f] hover:text-navy"}`}
+                className={`group flex items-center gap-2 py-[9px] text-[13px] leading-[1.3] transition-colors ${on ? "font-semibold text-navy" : "text-[#6f6f6f] hover:text-navy"}`}
               >
-                {item.label}
+                <span
+                  aria-hidden="true"
+                  className={`h-[6px] w-[6px] flex-none rounded-full bg-accent transition-transform duration-300 ${on ? "scale-100" : "scale-0 group-hover:scale-75"}`}
+                />
+                <span className="transition-transform duration-300 group-hover:translate-x-0.5">{item.label}</span>
               </a>
             </li>
           );

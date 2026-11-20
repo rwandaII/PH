@@ -24,6 +24,8 @@ export interface ResourceOptions<S extends z.ZodType<Record<string, unknown>>> {
   /** If set, a `slug` column is generated from this field when left empty. */
   slugFrom?: keyof z.infer<S> & string;
   orderBy: unknown;
+  /** Other columns holding uploaded files to delete together with the record (e.g. a video). */
+  alsoRemove?: string[];
   /** Final adjustments before saving (sanitising HTML, publish dates, ...). */
   prepare?: (data: z.infer<S>, existing: any | null) => Record<string, unknown>;
 }
@@ -142,6 +144,7 @@ export function crudRouter<S extends z.ZodType<Record<string, unknown>>>(
   router.delete('/:id', async (req, res) => {
     const removed = await delegate.delete({ where: { id: parseId(req) } });
     if (imageField) removeUpload(removed[imageField]);
+    for (const field of opts.alsoRemove ?? []) removeUpload(removed[field]);
     res.status(204).end();
   });
 

@@ -6,6 +6,33 @@ import { useEffect, useRef, useState } from "react";
 const reducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/** What animates in by itself on every page, without a reveal() in the markup. */
+// Bare images are left out: they move with their card, and a reveal on the <img> itself would
+// override its hover zoom.
+const AUTO_REVEAL = "main h2, main h3, main p, main figure, main blockquote, main form, main dl > div, main ul > li, main ol > li";
+/** Never animated: menus, dialogs, things already animated, and anything marked data-no-reveal. */
+const NO_REVEAL = "[data-reveal], [data-no-reveal], nav, dialog, header, [aria-hidden='true']";
+
+/**
+ * Marks headings, text, pictures and list items further down the page so they rise in as they
+ * come into view; list items follow one another. Content already on screen is left alone so
+ * nothing flickers when a page opens.
+ */
+function autoTag() {
+  const fold = window.innerHeight;
+  document.querySelectorAll<HTMLElement>(AUTO_REVEAL).forEach((el) => {
+    if (el.closest(NO_REVEAL)) return;
+    if (el.getBoundingClientRect().top < fold) return;
+    const pos = getComputedStyle(el).position;
+    if (pos === "absolute" || pos === "fixed" || pos === "sticky") return;
+    el.setAttribute("data-reveal", "");
+    if (el.tagName === "LI" && el.parentElement) {
+      const i = Array.prototype.indexOf.call(el.parentElement.children, el) % 6;
+      el.style.setProperty("--reveal-delay", `${i * 90}ms`);
+    }
+  });
+}
+
 /**
  * Watches every element with a `data-reveal` attribute and adds `is-visible` when it
  * scrolls into view (see globals.css). Also picks up elements added later, e.g. when
@@ -34,6 +61,7 @@ export function RevealOnScroll() {
     );
     const watch = (root: ParentNode) =>
       root.querySelectorAll("[data-reveal]:not(.is-visible)").forEach((el) => io.observe(el));
+    autoTag();
     watch(document);
 
     const mo = new MutationObserver((records) => {

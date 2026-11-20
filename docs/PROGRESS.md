@@ -244,3 +244,133 @@ Design prototype (canvas): https://claude.ai/artifact/2qEneXKDGJ48QzAt7GwTc9
   plus Marie Yvonne INGABIRE first, all using `/photos/portrait-cutout.png`. Replace them with real
   people in Dashboard → Team members before launch.
 - Tests: 37 passing (new: services, statistics).
+
+## Content from the WaterAid expression of interest + Certificates (2026-11-19)
+- Source: "Expression of interest for partnership with WaterAid Rwanda" (Hydraulic Programme, November 2026).
+  Import script: `backend/prisma/content/2026-11-19-eoi-content.ts` (safe to re-run; keeps every photo).
+- Replaced: About text, hero intro, vision, mission, contact details (ph.ruhengeri@gmail.com,
+  +250 788 742 632 / +250 788 621 192, P.O. Box 45 Ruhengeri). Services are now the document's three
+  intervention domains (the "Capacity building" service was removed; youth capacity building stays as a
+  project). Projects water supply, hygiene and sanitation, and environment got the document's text and
+  location (Musanze, Gakenke, Burera and Nyabihu); slugs, covers and photos unchanged.
+- New site_info fields (migration `20261119090000_certificates_and_profile`), editable in Dashboard →
+  About & contact info: generalObjective, specificObjectives (one per line), governanceText, areasText,
+  coreDistricts, otherDistricts.
+- About page: Mission and vision → Strategic objectives → Services → Where we work (districts panel) →
+  Governance and structure (+ HTML org chart, `components/site/OrgChart.tsx`, from Figure 1) →
+  Certificates teaser → Team.
+- Certificates and appreciations: table `certificates` (kind certificate|appreciation, issuer, issuedOn
+  date, description, image, sortOrder, isPublished). Admin CRUD `/api/admin/certificates`, public
+  `/api/public/certificates`, dashboard section "Certificates" (new `date` field type), public page
+  `/certificates` (tabs + full-size dialog), menu + footer links. First entry: RGB Certificate of
+  Compliance (7 Jan 2014), scan in `frontend/public/certificates/`.
+- Phone fields may hold several numbers separated by "/": `phoneNumbers()` in lib/format.ts gives one
+  tel: link each (contact page, footer, team profile).
+- Header nav (7 items) uses tighter spacing between 1024 and 1279px so it stays on one line.
+- Backend tests: 40 passing. Note: the document's text says 2 field supervisors, its chart shows 3.
+- Team by organisational chart (2026-11-19): team_members.category (migration `20261119120000_team_category`;
+  keys in backend/src/lib/team-categories.ts and frontend/src/lib/team-categories.ts, keep in step).
+  Dashboard → Team members has "Place in the organisational chart". About → Our team is grouped
+  (Leadership, Administration and finance, Technical team, Field team, DORWASA Ltd., Other staff) with
+  anchors `#team-<category>`; each chart box with people links there ("View N people"), empty boxes stay
+  plain. Existing members were placed from their roles by prisma/content/2026-11-19-team-categories.ts.
+  Backend tests: 41.
+- Logo + team page + motion (2026-11-19): the programme emblem (from the WaterAid EOI document) is cut out in
+  public/logo/ph-logo.png and ph-logo-on-dark.png (white ring for navy backgrounds); used by Logo.tsx (header,
+  footer, dashboard sidebar), the login page, app/icon.png and app/favicon.ico. Header shows the emblem only
+  below 520px. Main menu: About us, Projects, News, Partners, Our team (/team); Gallery and Certificates are in
+  the footer only. New /team page (groups like the chart, TeamCard portrait cards, chart at the bottom); chart
+  boxes link to /team#team-<category>. About: team preview (4 cards + "Meet the whole team") then Certificates.
+  Motion: reveal kinds rise/left/right/zoom/pop/fade with stagger; RevealOnScroll auto-tags headings, text,
+  images and list items below the fold in <main>; page transition via app/(site)/template.tsx (.page-in);
+  card lift, nav underline, logo settle/turn, button sheen, ripple rings; all off with prefers-reduced-motion.
+- Testimonials + more motion (2026-11-19): table `testimonials` (migration 20261119140000_testimonials).
+  Contact page "Tell us what you think about us" form (TestimonialForm.tsx, spam trap, rate limit) →
+  POST /api/public/testimonials; nothing is public until approved in Dashboard → "What people say"
+  (/dashboard/testimonials: waiting / on the site / all, approve, hide, delete; sidebar "N waiting" badge;
+  /admin/stats has pendingTestimonials). Approved ones show on Home under the team carousel
+  (TestimonialsCarousel.tsx: two at a time, 4 lines then "View more" that opens the card smoothly).
+  Back-to-top drop is one colour and sways all the time (.drop-wave). Card pictures float/sway slowly
+  (`card-float`, uses the translate/rotate properties so hover zooms still work): .float-card, .team-card,
+  .pop-chip, .pop-portrait, .testimonial-avatar, .zoom:not(.absolute); neighbours out of step. Card links lift
+  on hover (.zoom-host). Auto-reveal no longer tags bare <img> (it would cancel hover zoom). Backend tests: 43.
+- Section pages were tried and then removed at the user's request (2026-11-19): every page shows all its
+  sections again and the "On this page" card scrolls to them (#id), highlighting the section in view.
+- Team profile "Colleagues": TeamCard grid in chart order with each person's place in the chart, plus
+  "See the whole team". Every remaining card has a hover lift (.lift-card, uses `translate` so it works with
+  scroll reveals): comments, partners, areas of work, other projects, services columns, certificates,
+  testimonials, gallery albums.
+- Speed (2026-11-19): runs in fast mode now (backend `npm run build && npm start`, frontend `npm run build &&
+  npm start`); every public page is pre-built (stories, projects and team profiles via generateStaticParams)
+  and served in ~5-30 ms. Server fetches are cached (lib/server-api.ts: tag "content", 10-minute safety
+  refresh, React cache() de-duplicates per request); the API calls POST /revalidate-content after every
+  successful admin change (backend/src/lib/revalidate.ts, REVALIDATE_SECRET in backend/.env and
+  frontend/.env.local), so edits show on the next page load. Photos go through the Next image optimizer
+  (components/site/Img.tsx replaces <img> on the public site: WebP, srcset/sizes, lazy, async decode;
+  next.config images.localPatterns/qualities/minimumCacheTTL 7d): a field photo is 64 KB instead of 561 KB.
+  Animations: the header water lines are still SVGs moved by one GPU transform (.water-flow) instead of
+  animating 82 paths inside the SVG; card float is translate only (no rotate). Dashboard overview updated
+  (certificates, comments about us, sample profiles and unplaced team members, more quick actions).
+- Pictures, sliders, map and Google (2026-11-19):
+  - Picture places (table site_images, migration 20261119160000_site_images_and_map; keys in
+    backend/src/lib/site-images.ts and frontend/src/lib/site-images.ts with names, hints and pages):
+    header sliders for About, Projects, News, Our team, Gallery, Partners, Certificates, Contact, plus single
+    spots (About portrait, Home services photo, Home partners photo, Home stories background). Seeded with the
+    photos the site used (prisma/content/2026-11-19-pictures-and-map.ts). Dashboard → Pictures & sliders
+    (/dashboard/pictures): add several at once (button or drag and drop), move earlier/later, remove.
+  - Every page header is a slider (components/site/HeaderSlides.tsx: cross-fade every 6 s with a slow zoom,
+    dots + pause, pauses when the tab is hidden, still for reduced motion). ProgramHero takes `images`,
+    PageBanner takes `images` (the mosaic is gone). Story and project headers slide through their own photos.
+  - Anywhere without a picture shows the logo: public/logo/placeholder.jpg (imageOr(), team cards, empty places).
+  - Contact → "Find us": Google map pin, Street View tab, Get directions, Open in Google Maps
+    (components/site/LocationMap.tsx). Location is editable in Dashboard → About & contact info → "Where the
+    office is" (mapLink, latitude, longitude, streetViewUrl; a pasted embed code is reduced to its src).
+  - Search engines: metadataBase/keywords/Open Graph/Twitter card/canonical links, schema.org NGO + WebSite
+    JSON-LD in the site layout (lib/seo.ts), app/sitemap.ts, app/robots.ts. SITE_URL in frontend/.env.local must
+    be the real address once online. A Google knowledge panel needs a Google Business Profile (business.google.com)
+    claimed by the programme, plus the site verified in Google Search Console.
+  - Backend tests: 46.
+- Reliability and the PH logo (2026-11-19):
+  - Pause buttons removed from the Home hero slider and the page-header sliders (they still wait while hovered/focused).
+  - No real staff photos yet: the stand-in portrait was replaced by the PH logo
+    (prisma/content/2026-11-19-logo-instead-of-sample-photos.ts; team members get photo=null and show
+    public/logo/placeholder-portrait.jpg; the About portrait place shows /logo/ph-logo.png; profiles without a
+    photo show the emblem in front of the arch).
+  - Website → API (lib/server-api.ts): 8 s time limit, two retries on network errors/5xx; cached pages keep being
+    served while the API is down (tested). Dashboard (lib/dashboard/api.ts): time limits (uploads 3 min), GET
+    retried twice on network errors/500/502/503/504, clear messages for offline/slow/busy; saves never repeated.
+    Public forms use lib/send-form.ts (time limit, keeps the visitor's text, clear messages).
+  - Error boundaries: app/(site)/error.tsx, app/dashboard/error.tsx, app/global-error.tsx (TryAgain.tsx, retries
+    when back online). Img.tsx falls back to the logo if a picture fails to load.
+  - API: gzip compression (compression package), keep-alive 65 s, 5 min request timeout for slow uploads, clean
+    shutdown; database-unavailable errors answer 503 + Retry-After; bad JSON 400 and oversized bodies 413 with
+    clear messages. Backend tests: 48.
+  - Checked: 13 pages scrolled end to end with no browser errors or failed responses; on a simulated weak
+    connection (750 kbit/s, 300 ms) pages are usable in 2-3 s on a first visit.
+- Partners, videos, free portraits, emblem and office location (2026-11-19):
+  - PartnerBadge.tsx: "In partnership with" cycles through every partner (logo, or name if none) and links to
+    /partners#partner-<id>; used in the Home hero and on the photo in the Home partners section.
+  - PartnerMarquee.tsx: endless strip of logo cards (.marquee in globals.css; pauses on hover/focus; still for
+    reduced motion). Used in a new Home band "Our partners" between the news and "Our stories", and inside a
+    glass card in "Working together for safe water". Government of Rwanda has no logo yet (shows its name).
+  - Videos: news.video_file + news.video_url (migration 20261119180000_news_videos). Dashboard → News: "Video link"
+    (YouTube/Vimeo/Facebook) and "Video file" (VideoField.tsx: MP4/WebM/MOV/OGG up to 300 MB, progress bar,
+    cancel, replace, remove). Uploads go through app/upload-video/[id]/route.ts, which streams to the API
+    (the /api rewrite buffers bodies and stops at 10 MB / 30 s). Story page "Watch the video" section; News page
+    "Videos" section and a "Video" tag on stories. VideoPlayer.tsx: native player with preload=metadata;
+    YouTube (nocookie)/Vimeo/Facebook load only when play is pressed. The file is deleted with its story.
+  - Home team carousel: no circles; pictures stand free (PNG/logo float with a ground shadow; photos get rounded
+    corners). About "Who we are": EmblemShowcase.tsx (whole emblem on a glowing disc with ripples, centred).
+  - Office location field site_info.location (migration 20261119190000_office_location), set to
+    "FJWG+9XF, Ave Mikeno, Musanze": shown in the footer under "Our office" (links to the map), on Contact and
+    in the map section, and in the structured data. Editable in Dashboard → About & contact info.
+  - frontend `npm run build` / `npm start` first clear .next/cache/fetch-cache (scripts/clear-data-cache.mjs) so a
+    restart never shows content changed while the site was stopped. Backend tests: 51.
+- About "Who we are" emblem (2026-11-19, later): no panel or circle behind it (user request). EmblemShowcase.tsx:
+  the emblem floats (card-float) over a soft breathing glow (.emblem-glow, uses the `scale` property because
+  Tailwind 4 positions with `translate`) and two drifting wave layers (.emblem-wave) fading at the sides, plus
+  facts chips. Placed 60px below the top of its column so it never reaches the "On this page" card.
+- Partners on Home (2026-11-19, later): no badge in the hero any more; the badge under the partners photo has no
+  card (white logos via brightness-0 invert, one fades out before the next fades in). The partners text block has no
+  glass card and no logos (just names + link). The logo strip (PartnerMarquee) shows bare logos, no cards; the `tone`
+  prop is gone. Footer bar: "POWERED by COD RW" on the right, monospace, small, white/55.

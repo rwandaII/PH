@@ -3,15 +3,20 @@ import { WithPageNav } from "@/components/site/PageNav";
 import { FactsBand, FramedPhoto, OutlineLink, ProgramHero } from "@/components/site/ProgramLayout";
 import { STATUS_LABEL } from "@/lib/format";
 import { imageOr } from "@/lib/illustrations";
-import { getPublicOr, getSite } from "@/lib/server-api";
+import { getPublicOr, getSite, getSiteImages } from "@/lib/server-api";
+import { picturesOr } from "@/lib/site-images";
 import type { ProjectSummary } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Projects" };
+export const metadata: Metadata = {
+  title: "Projects",
+  description:
+    "Water supply systems, hygiene and sanitation, and environmental protection projects of the Hydraulic Programme in Musanze, Gakenke, Burera and Nyabihu.",
+};
 
 /** Projects page in the style of ALU's programme page: photo header, facts band, then one
  *  section per project, all in the same design (text and a framed photo, sides alternating). */
 export default async function ProjectsPage() {
-  const [projects, site] = await Promise.all([getPublicOr<ProjectSummary[]>("/projects", []), getSite()]);
+  const [projects, site, pics] = await Promise.all([getPublicOr<ProjectSummary[]>("/projects", []), getSite(), getSiteImages()]);
   const count = (s: ProjectSummary["status"]) => projects.filter((p) => p.status === s).length;
 
   return (
@@ -21,7 +26,7 @@ export default async function ProjectsPage() {
         subtitle={site.programName}
         place="Ruhengeri Diocese and beyond"
         text="Since 2007 the program has supplied water, promoted hygiene and sanitation and protected the environment, specifically for poor people living in remote areas."
-        image={imageOr(projects[0]?.coverImage, 0)}
+        images={picturesOr(pics, "projects.header")}
       />
 
       {projects.length === 0 ? (
@@ -49,7 +54,7 @@ export default async function ProjectsPage() {
                     <ProjectText project={p} />
                   </div>
                   <FramedPhoto
-                    src={imageOr(p.coverImage, p.id)}
+                    src={imageOr(p.coverImage)}
                     side={flip ? "left" : "right"}
                     label={{ title: STATUS_LABEL[p.status], text: p.location || "Ruhengeri Diocese" }}
                   />

@@ -6,6 +6,7 @@ import { Chevron } from "@/components/site/icons";
 import { api, ApiError } from "@/lib/dashboard/api";
 import { RESOURCES, type FieldDef, type ResourceDef } from "@/lib/dashboard/resources";
 import { ImageField } from "./ImageField";
+import { VideoField } from "./VideoField";
 import { RichTextEditor } from "./RichTextEditor";
 import { btnPlain, btnPrimary, ConfirmDelete, hintClass, labelClass, Loading, Notice, PageHead } from "./ui";
 
@@ -43,7 +44,8 @@ export function ResourceForm({ resource, id }: { resource: ResourceDef["key"]; i
         for (const f of def.fields) {
           if (f.type === "image") continue;
           const raw = item[f.name];
-          if (raw !== null && raw !== undefined) v[f.name] = raw as string | boolean | number;
+          // A date input wants "YYYY-MM-DD"; the API sends a full ISO date.
+          if (raw !== null && raw !== undefined) v[f.name] = f.type === "date" ? String(raw).slice(0, 10) : (raw as string | boolean | number);
         }
         setValues(v);
         if (imageDef) setCurrentImage((item[imageDef.name] as string | null) ?? null);
@@ -65,7 +67,9 @@ export function ResourceForm({ resource, id }: { resource: ResourceDef["key"]; i
     setSaved("");
 
     const form = new FormData();
-    for (const [k, v] of Object.entries(values)) form.append(k, String(v));
+    // Videos are uploaded on their own (VideoField), not with the form.
+    const skip = new Set(def.fields.filter((f) => f.type === "video").map((f) => f.name));
+    for (const [k, v] of Object.entries(values)) if (!skip.has(k)) form.append(k, String(v));
     if (image.file) form.append("image", image.file);
     else if (image.remove) form.append("removeImage", "true");
 
@@ -119,7 +123,17 @@ export function ResourceForm({ resource, id }: { resource: ResourceDef["key"]; i
 
           <div className="mt-6 grid gap-x-6 gap-y-[22px] bg-white p-6 sm:grid-cols-2 sm:p-8">
             {def.fields.map((f) =>
-              f.type === "image" ? (
+              f.type === "video" ? (
+                <div key={f.name} className="sm:col-span-2">
+                  <VideoField
+                    label={f.label}
+                    hint={f.hint}
+                    storyId={id ?? null}
+                    current={(values[f.name] as string) || null}
+                    onChange={(v) => setValues((old) => ({ ...old, [f.name]: v ?? "" }))}
+                  />
+                </div>
+              ) : f.type === "image" ? (
                 <div key={f.name} className="sm:col-span-2">
                   <ImageField key={currentImage ?? "none"} name={f.name} label={f.label} hint={f.hint} current={currentImage} onChange={setImage} error={fieldErrors.image} />
                 </div>
@@ -202,7 +216,7 @@ function Field({
       ) : (
         <input
           {...common}
-          type={def.type === "number" ? "number" : def.type === "url" ? "url" : "text"}
+          type={def.type === "number" ? "number" : def.type === "url" ? "url" : def.type === "date" ? "date" : "text"}
           required={def.required}
           value={String(value)}
           onChange={(e) => onChange(e.target.value)}
