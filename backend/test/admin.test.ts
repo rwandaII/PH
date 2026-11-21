@@ -95,12 +95,34 @@ describe('projects, team and partners', () => {
     expect(res.status).toBe(400);
   });
 
-  it('requires a team member name, role and biography', async () => {
+  it('requires a team member name and role; the biography is optional', async () => {
     const res = await agent.post('/api/admin/team').field('name', 'Amina');
     expect(res.status).toBe(400);
     expect(res.body.fields).toContainEqual(expect.objectContaining({ path: 'role' }));
-    expect(res.body.fields).toContainEqual(expect.objectContaining({ path: 'bio' }));
-    await agent.post('/api/admin/team').field('name', 'Amina').field('role', 'Engineer').field('bio', 'Builds water systems.').expect(201);
+    expect(res.body.fields).not.toContainEqual(expect.objectContaining({ path: 'bio' }));
+    const ok = await agent
+      .post('/api/admin/team')
+      .field('name', 'Amina')
+      .field('role', 'Engineer')
+      .field('washYears', '15 years')
+      .field('competence', 'Construction works')
+      .expect(201);
+    expect(ok.body).toMatchObject({ bio: '', washYears: '15 years', competence: 'Construction works' });
+  });
+
+  it('saves a partner as international or local, with its place, contacts and people', async () => {
+    const res = await agent
+      .post('/api/admin/partners')
+      .field('name', 'Q')
+      .field('scope', 'international')
+      .field('place', 'Aachen, Germany')
+      .field('badge', 'Principal donor')
+      .field('contacts', 'Email: info@q.test')
+      .field('contactPeople', 'A Person | Coordinator')
+      .expect(201);
+    expect(res.body).toMatchObject({ scope: 'international', place: 'Aachen, Germany', badge: 'Principal donor', contactPeople: 'A Person | Coordinator' });
+    const bad = await agent.post('/api/admin/partners').field('name', 'Q').field('scope', 'galactic');
+    expect(bad.status).toBe(400);
   });
 
   it('only accepts http(s) partner websites', async () => {

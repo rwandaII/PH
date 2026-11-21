@@ -6,8 +6,7 @@ import { Chevron, Facebook, Instagram, LinkedIn, Pin, WhatsApp, XLogo } from "@/
 import { WithPageNav, type PageNavItem } from "@/components/site/PageNav";
 import { ProfileArch } from "@/components/site/ProfileArch";
 import { FactsBand } from "@/components/site/ProgramLayout";
-import { TeamCard } from "@/components/site/TeamCard";
-import { groupTeam } from "@/lib/team-categories";
+import { KeyTeamCard, keyCardData, yearsOf } from "@/components/site/KeyTeamCard";
 import { reveal } from "@/lib/reveal";
 import { paragraphs, phoneNumbers } from "@/lib/format";
 import { getPublicOr, getSite } from "@/lib/server-api";
@@ -41,8 +40,9 @@ export default async function TeamMemberPage({ params }: Props) {
     .map((s) => s.trim())
     .filter(Boolean);
   const others = team.filter((t) => t.id !== m.id && t.slug);
-  // In chart order, each with their place in the chart.
-  const colleagues = groupTeam(others).flatMap((g) => g.parts.flatMap((p) => p.members.map((o) => ({ m: o, label: p.label }))));
+  // In the key technical team's order.
+  const colleagues = others;
+  const maxYears = Math.max(10, ...team.map((t) => yearsOf(t.washYears)));
   const firstName = m.name.split(/\s+/)[0];
   const office = m.address || site.address;
   const email = m.email || site.contactEmail;
@@ -56,6 +56,8 @@ export default async function TeamMemberPage({ params }: Props) {
     { label: "WhatsApp", href: m.whatsapp ? `https://wa.me/${m.whatsapp.replace(/[^\d]/g, "")}` : "", icon: <WhatsApp /> },
   ].filter((s) => s.href);
   const details = [
+    m.washYears ? { label: "Working years in the WASH domain", value: m.washYears } : null,
+    m.competence ? { label: "Area of competence", value: m.competence } : null,
     m.joinedYear ? { label: "With the program since", value: String(m.joinedYear) } : null,
     m.languages ? { label: "Languages", value: m.languages } : null,
   ].filter((d): d is { label: string; value: string } => !!d);
@@ -108,7 +110,9 @@ export default async function TeamMemberPage({ params }: Props) {
         <FactsBand
           facts={[
             { label: "Role", value: m.role },
-            { label: "Works on", value: areas.length > 0 ? `${areas.length} areas of the program` : "The program's work" },
+            m.washYears
+              ? { label: "In the WASH domain", value: m.washYears }
+              : { label: "Works on", value: areas.length > 0 ? `${areas.length} areas of the program` : "The program's work" },
             { label: "Program", value: "Hydraulic Program of Ruhengeri Diocese, since 2007" },
           ]}
         />
@@ -249,10 +253,10 @@ export default async function TeamMemberPage({ params }: Props) {
                   See the whole team <Chevron size={10} />
                 </Link>
               </div>
-              <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-6 sm:[grid-template-columns:repeat(auto-fill,minmax(185px,1fr))]">
-                {colleagues.map(({ m: o, label }, i) => (
-                  <li key={o.id} {...reveal(i % 4, "rise", 90)}>
-                    <TeamCard member={o} label={label || undefined} />
+              <ul className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {colleagues.map((o, i) => (
+                  <li key={o.id} {...reveal(i % 3, "rise", 90)} className="key-team-item">
+                    <KeyTeamCard member={keyCardData(o)} maxYears={maxYears} href={`/team/${o.slug}`} />
                   </li>
                 ))}
               </ul>

@@ -81,6 +81,10 @@ export interface TeamMember {
   address: string;
   /** Comma-separated areas of work. */
   expertise: string;
+  /** Years of work in the WASH domain, e.g. "15 years". */
+  washYears: string;
+  /** Area of competence, e.g. "Construction works". */
+  competence: string;
   languages: string;
   education: string;
   joinedYear: number | null;
@@ -122,7 +126,17 @@ export interface Partner {
   name: string;
   logo: string | null;
   websiteUrl: string;
+  /** Collaboration experience with the programme. */
   description: string;
+  scope: "international" | "local";
+  /** Where the partner is based. */
+  place: string;
+  /** Short highlight such as "Principal donor". */
+  badge: string;
+  /** Office contacts, one per line. */
+  contacts: string;
+  /** People to contact, one per line: "Name | Role". */
+  contactPeople: string;
   sortOrder: number;
 }
 

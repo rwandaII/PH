@@ -1,4 +1,5 @@
 import { Img } from "@/components/site/Img";
+import { shortName } from "@/components/site/partners/PartnerParts";
 import Link from "next/link";
 import { HeroSlider, type HeroSlide } from "@/components/site/HeroSlider";
 import { ArrowRight, Chevron, Facebook } from "@/components/site/icons";
@@ -246,7 +247,7 @@ export default async function HomePage() {
                   <div>
                     <p className="text-[20px] font-medium leading-[1.15]">Our partners</p>
                     <p className="mt-0.5 text-[13.5px] text-white/80">
-                      {partners.length} {partners.length === 1 ? "organisation" : "organisations"}: {listNames(partners.map((p) => p.name))}
+                      {partners.length} {partners.length === 1 ? "organisation" : "organisations"}: {listNames(partners.map((p) => shortName(p.name)))}
                     </p>
                   </div>
                   <Link href="/partners" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-bold text-navy transition-colors hover:bg-sky">

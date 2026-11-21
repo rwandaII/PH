@@ -85,7 +85,7 @@ export function RevealOnScroll() {
 }
 
 /** A number that counts up from 0 when it scrolls into view. Shows the real value without JS. */
-export function CountUp({ value, duration = 1400 }: { value: number; duration?: number }) {
+export function CountUp({ value, duration = 1400, group = true }: { value: number; duration?: number; group?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(value);
 
@@ -117,8 +117,8 @@ export function CountUp({ value, duration = 1400 }: { value: number; duration?: 
 
   return (
     <span ref={ref}>
-      <span aria-hidden="true">{shown}</span>
-      <span className="sr-only">{value}</span>
+      <span aria-hidden="true">{group ? shown.toLocaleString("en-US") : shown}</span>
+      <span className="sr-only">{group ? value.toLocaleString("en-US") : value}</span>
     </span>
   );
 }

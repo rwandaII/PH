@@ -4,10 +4,12 @@ import Link from "next/link";
 import { WithPageNav, type PageNavItem } from "@/components/site/PageNav";
 import { ArchPhoto, DarkBand, FactsBand, FramedPhoto, OutlineLink, ProgramHero } from "@/components/site/ProgramLayout";
 import { servicesFrom, type ServiceRow } from "@/lib/services";
-import { TeamCard } from "@/components/site/TeamCard";
+import { KeyTeamCard, keyCardData, yearsOf } from "@/components/site/KeyTeamCard";
+import { Accountability, Achievements, Approaches, TargetGroups } from "@/components/site/about/ProfileSections";
+import { Engagement } from "@/components/site/about/EngagementTabs";
 import { EmblemShowcase } from "@/components/site/EmblemShowcase";
 import { OrgChart } from "@/components/site/OrgChart";
-import { groupTeam, teamCounts } from "@/lib/team-categories";
+import { teamCounts } from "@/lib/team-categories";
 import { reveal } from "@/lib/reveal";
 import { Pin } from "@/components/site/icons";
 import { formatDay, lines, paragraphs } from "@/lib/format";
@@ -47,8 +49,9 @@ export default async function AboutPage() {
   const portrait = pictureOf(pics, "about.portrait");
   const portraitIsLogo = portrait.startsWith("/logo/");
 
-  // A preview of the team in chart order (leaders first); the whole team is on /team.
-  const teamPreview = groupTeam(team).flatMap((g) => g.parts.flatMap((p) => p.members.map((m) => ({ m, label: p.label })))).slice(0, 4);
+  // A preview of the key technical team, in its order; the whole team is on /team.
+  const teamPreview = team.slice(0, 3);
+  const maxYears = Math.max(10, ...team.map((m) => yearsOf(m.washYears)));
   const photos = [...projects.map((p) => p.coverImage), ...news.items.map((n) => n.coverImage)].filter((s): s is string => !!s);
 
   const nav: PageNavItem[] = [
@@ -57,12 +60,19 @@ export default async function AboutPage() {
   ];
   if (site.mission || site.vision) nav.push({ id: "mission", label: "Mission and vision" });
   if (site.generalObjective || objectives.length > 0) nav.push({ id: "objectives", label: "Strategic objectives" });
+  nav.push({ id: "target-groups", label: "Who we work for" });
   if (areas.length > 0 || coreDistricts.length > 0) nav.push({ id: "areas", label: "Where we work" });
+  nav.push(
+    { id: "achievements", label: "Key achievements" },
+    { id: "engagement", label: "Community engagement" },
+    { id: "approaches", label: "How we work" },
+    { id: "accountability", label: "Accountability" },
+  );
   if (governance.length > 0) nav.push({ id: "governance", label: "Governance and structure" });
   if (certificates.length > 0) nav.push({ id: "certificates", label: "Certificates" });
   if (team.length > 0) nav.push({ id: "team", label: "Our team" });
   // the order of the sections on the page
-  const ORDER = ["who", "mission", "objectives", "services", "areas", "governance", "team", "certificates"];
+  const ORDER = ["who", "mission", "objectives", "services", "target-groups", "areas", "achievements", "engagement", "approaches", "accountability", "governance", "team", "certificates"];
   nav.sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
 
   return (
@@ -192,6 +202,8 @@ export default async function AboutPage() {
           })}
         </section>
 
+        <TargetGroups />
+
         {(areas.length > 0 || coreDistricts.length > 0) && (
           <section id="areas" aria-labelledby="areas-heading" className="scroll-mt-6 bg-white">
             <div className="mx-auto grid max-w-[1172px] items-start gap-12 px-4 py-20 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-16 lg:py-[100px]">
@@ -233,6 +245,11 @@ export default async function AboutPage() {
           </section>
         )}
 
+        <Achievements />
+        <Engagement />
+        <Approaches />
+        <Accountability />
+
         {governance.length > 0 && (
           <section id="governance" aria-labelledby="governance-heading" className="scroll-mt-6 bg-white">
             <div className="mx-auto max-w-[1172px] border-t border-line px-4 py-20 lg:py-[100px]">
@@ -262,7 +279,8 @@ export default async function AboutPage() {
                     Our team
                   </h2>
                   <p {...reveal(1)} className="mt-4 max-w-[56ch] text-[15.5px] leading-[1.65] text-white/85">
-                    Six permanent staff, supported by field supervisors and ten field extensionists, grouped as in our organisational chart.
+                    Our key technical team: a competent multidisciplinary team across the Water, Sanitation and Hygiene (WASH) domains, supported by field
+                    extensionists.
                   </p>
                 </div>
                 <Link
@@ -273,10 +291,10 @@ export default async function AboutPage() {
                   Meet the whole team
                 </Link>
               </div>
-              <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-6 sm:[grid-template-columns:repeat(auto-fill,minmax(210px,1fr))]">
-                {teamPreview.map(({ m, label }, i) => (
-                  <li key={m.id} {...reveal(i, "rise", 100)} className="text-ink">
-                    <TeamCard member={m} label={label} />
+              <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {teamPreview.map((m, i) => (
+                  <li key={m.id} {...reveal(i, "rise", 100)} className="key-team-item text-ink">
+                    <KeyTeamCard member={keyCardData(m)} maxYears={maxYears} href={m.slug ? `/team/${m.slug}` : undefined} />
                   </li>
                 ))}
               </ul>

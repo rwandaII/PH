@@ -378,3 +378,32 @@ Design prototype (canvas): https://claude.ai/artifact/2qEneXKDGJ48QzAt7GwTc9
 - 2026-11-20: "Youth capacity building" renamed to "Human capacity building" everywhere (project title, text and
   address /projects/human-capacity-building, news stories, team expertise). To apply on another database:
   `npx tsx prisma/content/2026-11-20-human-capacity-building.ts` (safe to re-run).
+
+- 2026-11-21: Partners, key technical team and the rest of the organisational profile (source: "Expression of
+  interest for partnership with WaterAid Rwanda", kept word for word, only typos fixed):
+  - Migration `20261121100000_partner_profiles_team_experience`: partners.scope (international|local), place, badge,
+    contacts (one per line), contact_people ("Name | Role" per line); team_members.wash_years, competence. Team bio is
+    now optional. Dashboard forms updated. Backend tests: 52.
+  - Content script `prisma/content/2026-11-21-partners-and-team.ts` (safe to re-run): the 14 partners of Table 4
+    (4 international: MISEREOR, MEDICUS MUNDI NAVARRA, MANOS UNIDAS, Società di San Vincenzo di Paoli of Italy; 10 local),
+    Government of Rwanda removed (not in the table), 10 sample team profiles removed, Table 2 team added.
+    Partner references show office contacts + contact person name/role only: personal mobiles and personal emails are
+    left out on purpose (user's choice). Logos found on each partner's own website are in frontend/public/logo/partners/
+    (KCF, DORWASA, DERN and the local authorities have no website/logo and show a monogram).
+  - Partners page: intro (2.4 text + the highlighted key-donor sentence with donor names linked), numbers panel;
+    International partners = dot map of Europe/Africa with animated water routes to Musanze linked to the cards
+    (PartnerWorld.tsx); Local partners = network around the PH emblem with a story panel (PartnerNetwork.tsx,
+    auto-advances until touched, opens #partner-<id> from the URL); "Where we are going" = section 5 (WaterAid
+    paragraphs, unchanged, as a goal: WaterAid is still not listed as a partner).
+  - About: new sections Who we work for (Table 1 target groups as cards), Key achievements (counters), Community
+    engagement (tabs), How we work (4.1 approaches), Accountability (MEAL + risk management). Text in src/lib/profile.ts
+    (not editable in the dashboard yet).
+  - Team page: "Key technical team" cards (KeyTeamCard.tsx: water gauge = years in WASH relative to the longest),
+    plus the "Different extensionists" row; org chart kept. Chart boxes link to the first person of each box.
+  - 2026-11-21 (later): the local-partner circle (PartnerNetwork.tsx) was removed at the user's request ("too much").
+    Local partners now use the same engine as the international map: `<PartnerWorld map="rwanda">` draws a dot map
+    of Rwanda (Lake Kivu, neighbours, Kigali, Gakenke/Burera/Nyabihu) with routes to Musanze; Kigali partners sit on a
+    small ring around Kigali, Musanze partners on an arc east of the hub, local authorities on the three districts.
+    Both sections are dark with transparent "glass" cards (.glass-card). Fixes: sections use overflow-clip (overflow
+    hidden broke the sticky map, leaving empty space); the map's root has data-no-reveal because re-renders wiped the
+    scroll-reveal class and the cards stayed invisible.

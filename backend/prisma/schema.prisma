@@ -88,6 +88,10 @@ model TeamMember {
   phone     String   @default("") @db.VarChar(60)
   address   String   @default("") @db.VarChar(255)
   expertise String   @default("") @db.VarChar(500)
+  /// Years of work in the WASH domain, e.g. "15 years"
+  washYears  String  @default("") @map("wash_years") @db.VarChar(40)
+  /// Area of competence, e.g. "Water Resources and Environment Management"
+  competence String  @default("") @db.VarChar(255)
   /// Profile extras shown on the member's own page.
   languages    String  @default("") @db.VarChar(255)
   education    String  @default("") @db.VarChar(1000)
@@ -111,6 +115,16 @@ model Partner {
   logo        String?  @db.VarChar(255)
   websiteUrl  String   @default("") @map("website_url") @db.VarChar(255)
   description String   @default(dbgenerated("('')")) @db.Text
+  /// "international" or "local"
+  scope         String @default("local") @db.VarChar(20)
+  /// Where the partner is based, e.g. "Aachen, Germany"
+  place         String @default("") @db.VarChar(160)
+  /// Short highlight, e.g. "Principal donor"
+  badge         String @default("") @db.VarChar(60)
+  /// Office contacts, one per line
+  contacts      String @default(dbgenerated("('')")) @db.Text
+  /// People to contact, one per line: "Name | Role"
+  contactPeople String @default(dbgenerated("('')")) @map("contact_people") @db.Text
   sortOrder   Int      @default(0) @map("sort_order")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")

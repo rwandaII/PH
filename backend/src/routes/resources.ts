@@ -68,7 +68,7 @@ export const teamRouter = crudRouter({
     slug: text(140),
     role: z.string().trim().min(1, 'Role is required').max(120),
     category: z.enum(['', ...TEAM_CATEGORIES]).default(''),
-    bio: z.string().trim().min(1, 'A biography is required').max(5000),
+    bio: text(5000),
     email: z
       .string()
       .trim()
@@ -78,6 +78,8 @@ export const teamRouter = crudRouter({
     phone: text(60),
     address: text(255),
     expertise: text(500),
+    washYears: text(40),
+    competence: text(255),
     languages: text(255),
     education: text(1000),
     joinedYear: z.preprocess(
@@ -101,6 +103,11 @@ export const partnersRouter = crudRouter({
     name: z.string().trim().min(1, 'Name is required').max(160),
     websiteUrl: optionalUrl,
     description: text(5000),
+    scope: z.enum(['international', 'local']).default('local'),
+    place: text(160),
+    badge: text(60),
+    contacts: text(5000),
+    contactPeople: text(5000),
     sortOrder: formInt.default(0),
   }),
 });
