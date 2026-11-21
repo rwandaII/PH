@@ -63,7 +63,7 @@ const PARTNERS: PartnerRow[] = [
     scope: 'international',
     place: 'Madrid, Spain',
     badge: 'Key recent donor',
-    logo: '/logo/partners/manos-unidas.svg',
+    logo: '/logo/partners/manos-unidas-blue.svg',
     websiteUrl: 'https://www.manosunidas.org/',
     description:
       'A partner of the Catholic Church in Spain for aid, promotion and development of the developing countries. The partnership with PH consisted of the financial support it granted for the construction of some WSS (water supply systems), specifically for schools.',

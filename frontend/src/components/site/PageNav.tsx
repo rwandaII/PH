@@ -19,18 +19,21 @@ export function WithPageNav({
   items,
   action,
   overlap = 84,
+  compact = false,
   children,
 }: {
   items: PageNavItem[];
   action?: { href: string; label: string };
   overlap?: number;
+  /** Tighter rows and padding, for a long page. */
+  compact?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="relative">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 max-lg:hidden" style={{ top: -overlap }}>
         <div className="mx-auto flex h-full max-w-[1172px] justify-end px-4">
-          <PageNavCard items={items} action={action} />
+          <PageNavCard items={items} action={action} compact={compact} />
         </div>
       </div>
       {children}
@@ -38,7 +41,7 @@ export function WithPageNav({
   );
 }
 
-function PageNavCard({ items, action }: { items: PageNavItem[]; action?: { href: string; label: string } }) {
+function PageNavCard({ items, action, compact }: { items: PageNavItem[]; action?: { href: string; label: string }; compact: boolean }) {
   const [current, setCurrent] = useState(items[0]?.id);
 
   useEffect(() => {
@@ -58,7 +61,7 @@ function PageNavCard({ items, action }: { items: PageNavItem[]; action?: { href:
   return (
     <nav
       aria-label="On this page"
-      className="page-nav-card pointer-events-auto h-fit w-[254px] rounded-br-[60px] bg-white px-[25px] pb-[46px] pt-[50px] shadow-[0_22px_44px_-22px_rgba(0,30,70,.45)]"
+      className={`page-nav-card pointer-events-auto h-fit w-[254px] rounded-br-[60px] bg-white px-[25px] shadow-[0_22px_44px_-22px_rgba(0,30,70,.45)] ${compact ? "pb-[30px] pt-[32px]" : "pb-[46px] pt-[50px]"}`}
     >
       <ul>
         {items.map((item, i) => {
@@ -68,7 +71,7 @@ function PageNavCard({ items, action }: { items: PageNavItem[]; action?: { href:
               <a
                 href={`#${item.id}`}
                 aria-current={on ? "location" : undefined}
-                className={`group flex items-center gap-2 py-[9px] text-[13px] leading-[1.3] transition-colors ${on ? "font-semibold text-navy" : "text-[#6f6f6f] hover:text-navy"}`}
+                className={`group flex items-center gap-2 ${compact ? "py-[7px]" : "py-[9px]"} text-[13px] leading-[1.3] transition-colors ${on ? "font-semibold text-navy" : "text-[#6f6f6f] hover:text-navy"}`}
               >
                 <span
                   aria-hidden="true"

@@ -71,6 +71,9 @@ interface MapDef {
   caption: (n: number) => string;
 }
 
+/** How long each partner stays on screen when the slider turns by itself. */
+const SLIDE_MS = 6500;
+
 /* ---------- Europe and Africa (10 units per degree, lon -12..42, lat 58..-12) ---------- */
 const E = { lon0: -12, lon1: 42, lat0: 58, lat1: -12, k: 10 };
 const ePx = (lon: number, lat: number): Pt => [(lon - E.lon0) * E.k, (E.lat0 - lat) * E.k];
@@ -192,14 +195,33 @@ export function PartnerWorld({ partners, map = "world" }: { partners: Partner[];
   const motion = useMotionOK();
   const [active, setActive] = useState(0);
   const [held, setHeld] = useState(false);
-  const cards = useRef<(HTMLLIElement | null)[]>([]);
+  const root = useRef<HTMLDivElement>(null);
+  const swipe = useRef<number | null>(null);
+  const n = partners.length;
 
-  // Light the routes in turn while nobody is pointing at one.
+  // Move to the next partner in turn while nobody is pointing at the map or the card.
   useEffect(() => {
-    if (!motion || held || partners.length < 2) return;
-    const t = window.setInterval(() => setActive((a) => (a + 1) % partners.length), 4200);
+    if (!motion || held || n < 2) return;
+    const t = window.setInterval(() => setActive((a) => (a + 1) % n), SLIDE_MS);
     return () => window.clearInterval(t);
-  }, [motion, held, partners.length]);
+  }, [motion, held, n, active]);
+
+  // Open the partner named in the address (#partner-12), e.g. from the Home page.
+  useEffect(() => {
+    const fromHash = () => {
+      const id = Number(window.location.hash.replace("#partner-", ""));
+      const i = partners.findIndex((p) => p.id === id);
+      if (i < 0) return;
+      setActive(i);
+      setHeld(true);
+      root.current?.scrollIntoView({ block: "center" });
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
+  }, [partners]);
+
+  const go = (i: number) => setActive(((i % n) + n) % n);
 
   const homes = m.homes(partners);
   const routes = homes.map((h, i) => h.pins.map((pin) => route(pin, m.hub, m.bend(i))));
@@ -207,7 +229,6 @@ export function PartnerWorld({ partners, map = "world" }: { partners: Partner[];
   const focusCard = (i: number) => {
     setActive(i);
     setHeld(true);
-    cards.current[i]?.scrollIntoView({ behavior: motion ? "smooth" : "auto", block: "nearest" });
   };
 
   const g = `pw-${m.id}`;
@@ -216,9 +237,9 @@ export function PartnerWorld({ partners, map = "world" }: { partners: Partner[];
 
   return (
     // data-no-reveal: these cards re-render as the routes change, which would wipe the scroll-reveal class.
-    <div data-no-reveal="" className="grid items-start gap-10 lg:grid-cols-[minmax(0,.92fr)_minmax(0,1.08fr)] lg:gap-14">
-      {/* The map, kept in view beside the cards */}
-      <figure className="relative mx-auto w-full max-w-[520px] lg:sticky lg:top-8" onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}>
+    <div ref={root} data-no-reveal="" className="grid items-center gap-10 lg:grid-cols-[minmax(0,.92fr)_minmax(0,1.08fr)] lg:gap-14">
+      {/* The map */}
+      <figure className="relative mx-auto w-full max-w-[520px]" onMouseEnter={() => setHeld(true)} onMouseLeave={() => setHeld(false)}>
         <svg viewBox={`0 0 ${m.W} ${m.H}`} className="h-auto w-full overflow-visible" role="img" aria-labelledby={`${g}-title`}>
           <title id={`${g}-title`}>{m.title(homes)}</title>
           <defs>
@@ -313,7 +334,8 @@ export function PartnerWorld({ partners, map = "world" }: { partners: Partner[];
                 {(m.labelsAlways || on) &&
                   (() => {
                     const [x, y] = h.pins[0];
-                    const left = m.labelsAlways ? x < 120 : x < m.hub[0];
+                    // world map: names to the right of pins near the west edge; Rwanda map: to the right of pins east of Musanze, so they never cover its name
+                    const left = m.labelsAlways ? x < 120 : x >= m.hub[0] - 4;
                     return (
                       <text
                         x={x + (left ? 14 : -14)}
@@ -338,81 +360,155 @@ export function PartnerWorld({ partners, map = "world" }: { partners: Partner[];
         <figcaption className="mt-3 text-center text-[12.5px] text-white/60">{m.caption(partners.length)}</figcaption>
       </figure>
 
-      {/* The cards */}
-      <ol className="grid gap-5" onMouseLeave={() => setHeld(false)}>
-        {partners.map((p, i) => {
-          const on = i === active;
-          return (
-            <li
-              key={p.id}
-              id={`partner-${p.id}`}
-              ref={(el) => {
-                cards.current[i] = el;
-              }}
-              onMouseEnter={() => {
-                setHeld(true);
-                setActive(i);
-              }}
-              onFocus={() => {
-                setHeld(true);
-                setActive(i);
-              }}
-              onPointerMove={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
-                e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
-              }}
-              className={`spot-card glass-card group relative scroll-mt-8 overflow-hidden border transition-[border-color,background-color,box-shadow] duration-500 ${
-                on ? "is-on border-[#48cae4]/80 bg-white/[.11] shadow-[0_24px_60px_-30px_rgba(72,202,228,.55)]" : "border-white/15 bg-white/[.05]"
-              }`}
-            >
-              <span aria-hidden="true" className={`absolute left-0 top-0 h-full w-[3px] origin-top bg-[#48cae4] transition-transform duration-500 ${on ? "scale-y-100" : "scale-y-0"}`} />
-              <div className="relative flex flex-wrap items-center gap-5 p-5 sm:p-6">
-                <div className="logo-tile flex h-[78px] w-[132px] flex-none items-center justify-center bg-white p-3 text-[26px] shadow-[0_14px_30px_-18px_rgba(0,0,0,.6)]">
-                  <PartnerLogo partner={p} sizes="264px" />
-                </div>
-                <div className="min-w-0 flex-[1_1_220px]">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[12px] font-semibold tabular-nums text-[#90e0ef]">{String(i + 1).padStart(2, "0")}</span>
+      {/* The cards: a slider, one partner at a time, in step with the map */}
+      <div
+        className="min-w-0"
+        onMouseEnter={() => setHeld(true)}
+        onMouseLeave={() => setHeld(false)}
+        onFocusCapture={() => setHeld(true)}
+        onKeyDown={(e) => {
+          if (e.target instanceof HTMLElement && e.target.closest("summary, a")) return;
+          if (e.key === "ArrowRight") go(active + 1);
+          if (e.key === "ArrowLeft") go(active - 1);
+        }}
+      >
+        {/* counter, arrows and the timer of the automatic turn */}
+        <div className="flex items-center justify-between gap-4">
+          <p className="tabular-nums" aria-live={held ? "polite" : "off"}>
+            <span className="font-display text-[40px] font-light leading-none text-white">{String(active + 1).padStart(2, "0")}</span>
+            <span className="text-[14px] font-semibold text-white/50"> / {String(n).padStart(2, "0")}</span>
+            <span className="sr-only">: {partners[active]?.name}</span>
+          </p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => go(active - 1)} aria-label="Previous partner" className="flex h-11 w-11 items-center justify-center border border-white/30 text-white transition-colors hover:border-[#48cae4] hover:bg-[#48cae4] hover:text-navy">
+              <span aria-hidden="true">←</span>
+            </button>
+            <button type="button" onClick={() => go(active + 1)} aria-label="Next partner" className="flex h-11 w-11 items-center justify-center border border-white/30 text-white transition-colors hover:border-[#48cae4] hover:bg-[#48cae4] hover:text-navy">
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+        <div aria-hidden="true" className="mt-3 flex gap-1">
+          {partners.map((p, i) => (
+            <span key={p.id} className="relative h-[3px] flex-1 overflow-hidden bg-white/15">
+              {i < active && <span className="absolute inset-0 bg-[#48cae4]" />}
+              {i === active && (
+                <span
+                  key={`${active}-${held}`}
+                  className={`absolute inset-0 origin-left bg-[#48cae4] ${motion && !held ? "slide-timer" : ""}`}
+                  style={{ animationDuration: `${SLIDE_MS}ms` }}
+                />
+              )}
+            </span>
+          ))}
+        </div>
+
+        {/* the slides, stacked in one place so the slider keeps the height of the tallest card */}
+        <div
+          className="mt-5 grid"
+          onPointerDown={(e) => {
+            swipe.current = e.clientX;
+          }}
+          onPointerUp={(e) => {
+            if (swipe.current === null) return;
+            const dx = e.clientX - swipe.current;
+            swipe.current = null;
+            if (Math.abs(dx) > 50) {
+              setHeld(true);
+              go(active + (dx < 0 ? 1 : -1));
+            }
+          }}
+        >
+          {partners.map((p, i) => {
+            const on = i === active;
+            const side = i < active ? "is-before" : i > active ? "is-after" : "";
+            return (
+              <article
+                key={p.id}
+                id={`partner-${p.id}`}
+                aria-label={p.name}
+                aria-hidden={!on}
+                inert={!on}
+                onPointerMove={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+                  e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+                }}
+                className={`slide spot-card glass-card group relative scroll-mt-8 overflow-hidden border [grid-area:1/1] ${
+                  on ? "is-on border-[#48cae4]/70 bg-white/[.1] shadow-[0_24px_60px_-30px_rgba(72,202,228,.55)]" : `border-white/15 bg-white/[.05] ${side}`
+                }`}
+              >
+                <span aria-hidden="true" className="absolute left-0 top-0 h-full w-[3px] bg-[#48cae4]" />
+                <div className="relative flex flex-wrap items-center gap-5 p-5 sm:p-6">
+                  <div className="logo-tile flex h-[78px] w-[132px] flex-none items-center justify-center bg-white p-3 text-[26px] shadow-[0_14px_30px_-18px_rgba(0,0,0,.6)]">
+                    <PartnerLogo partner={p} sizes="264px" />
+                  </div>
+                  <div className="min-w-0 flex-[1_1_220px]">
                     {p.badge && (
-                      <span className={`px-2.5 py-[3px] text-[11px] font-bold uppercase tracking-[.08em] ${/principal/i.test(p.badge) ? "bg-[#ffd166] text-navy" : "bg-[#48cae4]/20 text-[#90e0ef]"}`}>
+                      <span className={`inline-block px-2.5 py-[3px] text-[11px] font-bold uppercase tracking-[.08em] ${/principal/i.test(p.badge) ? "bg-[#ffd166] text-navy" : "bg-[#48cae4]/20 text-[#90e0ef]"}`}>
                         {p.badge}
                       </span>
                     )}
+                    <h3 className={`text-[19px] font-bold leading-[1.25] text-white ${p.badge ? "mt-1.5" : ""}`}>{p.name}</h3>
+                    {p.place && (
+                      <p className="mt-1 flex items-center gap-1.5 text-[13px] text-white/70">
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 flex-none text-[#48cae4]" fill="currentColor">
+                          <path d="M12 2a7 7 0 0 0-7 7c0 5.3 7 13 7 13s7-7.7 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
+                        </svg>
+                        {p.place}
+                      </p>
+                    )}
                   </div>
-                  <h3 className="mt-1.5 text-[19px] font-bold leading-[1.25] text-white">{p.name}</h3>
-                  {p.place && (
-                    <p className="mt-1 flex items-center gap-1.5 text-[13px] text-white/70">
-                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5 flex-none text-[#48cae4]" fill="currentColor">
-                        <path d="M12 2a7 7 0 0 0-7 7c0 5.3 7 13 7 13s7-7.7 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
-                      </svg>
-                      {p.place}
-                    </p>
+                </div>
+                <div className="relative px-5 pb-5 sm:px-6 sm:pb-6">
+                  <p className="text-[12px] font-bold uppercase tracking-[.14em] text-[#90e0ef]">Collaboration experience</p>
+                  <p className="mt-2 text-[15px] leading-[1.7] text-white/90">{p.description}</p>
+                  <details className="ref-details mt-4 border-t border-white/15 pt-3">
+                    <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-[13.5px] font-semibold text-white hover:text-[#90e0ef]">
+                      Partner reference
+                      <span aria-hidden="true" className="ref-plus relative h-4 w-4 flex-none" />
+                    </summary>
+                    <div className="ref-body pb-1 pt-3">
+                      <PartnerReference partner={p} tone="dark" />
+                    </div>
+                  </details>
+                  {p.websiteUrl && (
+                    <div className="mt-4">
+                      <WebsiteLink partner={p} tone="dark" />
+                    </div>
                   )}
                 </div>
-              </div>
-              <div className="relative px-5 pb-5 sm:px-6 sm:pb-6">
-                <p className="text-[12px] font-bold uppercase tracking-[.14em] text-[#90e0ef]">Collaboration experience</p>
-                <p className="mt-2 text-[15px] leading-[1.7] text-white/90">{p.description}</p>
-                <details className="ref-details mt-4 border-t border-white/15 pt-3">
-                  <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 text-[13.5px] font-semibold text-white hover:text-[#90e0ef]">
-                    Partner reference
-                    <span aria-hidden="true" className="ref-plus relative h-4 w-4 flex-none" />
-                  </summary>
-                  <div className="ref-body pb-1 pt-3">
-                    <PartnerReference partner={p} tone="dark" />
-                  </div>
-                </details>
-                {p.websiteUrl && (
-                  <div className="mt-4">
-                    <WebsiteLink partner={p} tone="dark" />
-                  </div>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* every partner as a small logo chip: jump straight to one */}
+        <ul aria-label="Choose a partner" className="mt-5 flex flex-wrap gap-2">
+          {partners.map((p, i) => {
+            const on = i === active;
+            return (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHeld(true);
+                    go(i);
+                  }}
+                  aria-pressed={on}
+                  title={p.name}
+                  className={`flex h-11 w-[68px] items-center justify-center bg-white p-1.5 text-[12px] transition-[translate,box-shadow,opacity] duration-300 ${
+                    on ? "-translate-y-1 opacity-100 shadow-[0_0_0_3px_#48cae4,0_12px_24px_-12px_rgba(0,0,0,.6)]" : "opacity-60 hover:-translate-y-0.5 hover:opacity-100"
+                  }`}
+                >
+                  <PartnerLogo partner={p} sizes="136px" />
+                  <span className="sr-only">{p.name}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }

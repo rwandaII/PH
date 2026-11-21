@@ -1185,3 +1185,43 @@ li:nth-child(3n) .target-icon {
 .glass-card.is-on .logo-tile {
   box-shadow: 0 0 0 3px rgba(72, 202, 228, 0.45), 0 14px 30px -18px rgba(0, 0, 0, 0.6);
 }
+
+/* Partner slider beside the maps: the chosen card slides in, the others wait to either side */
+.slide {
+  transition:
+    opacity 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+    translate 0.55s cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 0.5s,
+    background-color 0.5s;
+}
+.slide.is-before,
+.slide.is-after {
+  opacity: 0;
+  pointer-events: none;
+}
+.slide.is-before {
+  translate: -40px 0;
+}
+.slide.is-after {
+  translate: 40px 0;
+}
+@keyframes slide-timer {
+  from {
+    scale: 0 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+.slide-timer {
+  animation: slide-timer linear both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slide {
+    transition: none;
+  }
+  .slide.is-before,
+  .slide.is-after {
+    translate: none;
+  }
+}

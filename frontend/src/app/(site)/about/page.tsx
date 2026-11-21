@@ -54,26 +54,16 @@ export default async function AboutPage() {
   const maxYears = Math.max(10, ...team.map((m) => yearsOf(m.washYears)));
   const photos = [...projects.map((p) => p.coverImage), ...news.items.map((n) => n.coverImage)].filter((s): s is string => !!s);
 
-  const nav: PageNavItem[] = [
-    { id: "who", label: "Who we are" },
-    { id: "services", label: "Our services" },
-  ];
+  // The main sections only: a long menu would run over the "Who we are" emblem.
+  const nav: PageNavItem[] = [{ id: "who", label: "Who we are" }];
   if (site.mission || site.vision) nav.push({ id: "mission", label: "Mission and vision" });
-  if (site.generalObjective || objectives.length > 0) nav.push({ id: "objectives", label: "Strategic objectives" });
-  nav.push({ id: "target-groups", label: "Who we work for" });
-  if (areas.length > 0 || coreDistricts.length > 0) nav.push({ id: "areas", label: "Where we work" });
   nav.push(
+    { id: "services", label: "Our services" },
+    { id: "target-groups", label: "Who we work for" },
     { id: "achievements", label: "Key achievements" },
-    { id: "engagement", label: "Community engagement" },
     { id: "approaches", label: "How we work" },
-    { id: "accountability", label: "Accountability" },
   );
-  if (governance.length > 0) nav.push({ id: "governance", label: "Governance and structure" });
-  if (certificates.length > 0) nav.push({ id: "certificates", label: "Certificates" });
   if (team.length > 0) nav.push({ id: "team", label: "Our team" });
-  // the order of the sections on the page
-  const ORDER = ["who", "mission", "objectives", "services", "target-groups", "areas", "achievements", "engagement", "approaches", "accountability", "governance", "team", "certificates"];
-  nav.sort((a, b) => ORDER.indexOf(a.id) - ORDER.indexOf(b.id));
 
   return (
     <>
@@ -85,7 +75,7 @@ export default async function AboutPage() {
         images={picturesOr(pics, "about.header")}
       />
 
-      <WithPageNav items={nav} action={{ href: "/contact", label: "Contact us" }}>
+      <WithPageNav items={nav} action={{ href: "/contact", label: "Contact us" }} compact>
         <FactsBand
           facts={[
             { label: "Working since", value: "2007", big: true },
