@@ -1098,32 +1098,55 @@ li:nth-child(3n) .target-icon {
 .approach-card:hover .approach-num {
   background-position: 0 100%;
 }
-@keyframes meal-sweep {
-  from {
-    rotate: -90deg;
+/* MEAL loop: the steps light up one after another (2 s each), the letter swells, water rises in the card */
+@keyframes meal-step {
+  0%,
+  25%,
+  100% {
+    border-color: #d6e7f0;
+    box-shadow: none;
   }
-  to {
-    rotate: 270deg;
+  4%,
+  21% {
+    border-color: var(--accent);
+    box-shadow: 0 22px 44px -28px rgba(0, 46, 109, 0.55);
   }
 }
-.meal-sweep {
-  transform-origin: 100px 100px;
-  animation: meal-sweep 6s linear infinite;
+.meal-step {
+  animation: meal-step 8s ease-in-out infinite;
+}
+@keyframes meal-step-fill {
+  0%,
+  25%,
+  100% {
+    height: 0;
+  }
+  8%,
+  21% {
+    height: 100%;
+  }
+}
+.meal-step-fill {
+  animation: meal-step-fill 8s ease-in-out infinite;
 }
 @keyframes meal-pulse {
   0%,
-  22%,
+  25%,
   100% {
     background-color: var(--navy);
     scale: 1;
   }
-  8% {
+  6%,
+  18% {
     background-color: var(--accent);
-    scale: 1.18;
+    scale: 1.12;
   }
 }
 .meal-letter {
-  animation: meal-pulse 6s ease-in-out infinite;
+  animation: meal-pulse 8s ease-in-out infinite;
+}
+.meal-step:hover {
+  border-color: var(--accent);
 }
 .risk-row {
   transition: translate 0.3s;
@@ -1148,7 +1171,8 @@ li:nth-child(3n) .target-icon {
   .gauge-wave,
   .key-team-item:target .key-card,
   .target-icon,
-  .meal-sweep,
+  .meal-step,
+  .meal-step-fill,
   .meal-letter,
   .tab-wave {
     animation: none;

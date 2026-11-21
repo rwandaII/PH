@@ -215,9 +215,45 @@ export function Approaches() {
   );
 }
 
+/** Line icons for the MEAL steps. */
+function MealIcon({ name }: { name: "eye" | "chart" | "shield" | "bulb" }) {
+  const d = {
+    eye: (
+      <>
+        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+        <circle cx="12" cy="12" r="3" />
+      </>
+    ),
+    chart: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+    shield: (
+      <>
+        <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" />
+        <path d="M8.5 12l2.5 2.5 4.5-5" />
+      </>
+    ),
+    bulb: (
+      <>
+        <path d="M9 18h6M10 21h4" />
+        <path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" />
+      </>
+    ),
+  }[name];
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8">
+      {d}
+    </svg>
+  );
+}
+
 /** 3.3 MEAL and 3.4 risk management, side by side; the MEAL letters turn like a cycle. */
 export function Accountability() {
-  const cycle = ["Monitoring", "Evaluation", "Accountability", "Learning"];
+  // Each step's line is taken from the MEAL paragraph of the programme's profile.
+  const cycle = [
+    { title: "Monitoring", text: "Regular field visits, supervision, data collection and follow-up with communities", icon: "eye" },
+    { title: "Evaluation", text: "Progress measured against activities, targets, indicators, timelines and resources", icon: "chart" },
+    { title: "Accountability", text: "Transparency, and partners\u2019 monitoring and reporting requirements", icon: "shield" },
+    { title: "Learning", text: "Evidence-based decision-making and continuous improvement", icon: "bulb" },
+  ] as const;
   return (
     <section id="accountability" aria-labelledby="accountability-heading" className="scroll-mt-6 bg-white">
       <div className="mx-auto max-w-[1172px] px-4 py-20 lg:py-[100px] lg:pr-[300px]">
@@ -228,47 +264,56 @@ export function Accountability() {
           Accountability and risk management
         </h2>
 
-        <div className="mt-12 grid items-center gap-10 md:grid-cols-[230px_minmax(0,1fr)] md:gap-12">
-          {/* MEAL cycle */}
-          <div {...reveal(0, "zoom")} className="relative mx-auto aspect-square w-[230px]" aria-hidden="true">
-            <svg viewBox="0 0 200 200" className="absolute inset-0 h-full w-full">
-              <circle cx="100" cy="100" r="78" fill="none" stroke="#d6e7f0" strokeWidth="14" />
-              <circle cx="100" cy="100" r="78" fill="none" stroke="#0077b6" strokeWidth="14" strokeDasharray="110 380" strokeLinecap="round" className="meal-sweep" />
+        <h3 {...reveal(0)} className="mt-12 text-[15px] font-bold text-navy">
+          Monitoring, Evaluation, Accountability and Learning (MEAL)
+        </h3>
+
+        {/* MEAL as a loop: four steps joined by a flowing water line, and a return line back to the start */}
+        <div className="meal-flow relative mt-6">
+          <ol className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-3">
+            {cycle.map((c, i) => (
+              <li key={c.title} {...reveal(i, "rise", 120)} className="relative">
+                <div className="meal-step relative h-full overflow-hidden border border-[#d6e7f0] bg-white px-5 pb-5 pt-6" style={{ animationDelay: `${i * 2}s` }}>
+                  <span aria-hidden="true" className="meal-step-fill absolute inset-x-0 bottom-0 h-0 bg-[linear-gradient(180deg,rgba(72,202,228,.14),rgba(0,119,182,.12))]" style={{ animationDelay: `${i * 2}s` }} />
+                  <div className="relative flex items-center justify-between">
+                    <span className="meal-letter font-display flex h-14 w-14 items-center justify-center rounded-full bg-navy text-[26px] text-white" style={{ animationDelay: `${i * 2}s` }}>
+                      {c.title[0]}
+                    </span>
+                    <span aria-hidden="true" className="text-accent/70">
+                      <MealIcon name={c.icon} />
+                    </span>
+                  </div>
+                  <p className="relative mt-4 text-[16px] font-bold text-navy">
+                    <span className="text-accent">{c.title[0]}</span>
+                    {c.title.slice(1)}
+                  </p>
+                  <p className="relative mt-1.5 text-[13.5px] leading-[1.55] text-muted">{c.text}</p>
+                </div>
+                {/* arrow to the next step */}
+                {i < cycle.length - 1 && (
+                  <span aria-hidden="true" className="meal-arrow absolute -right-[13px] top-[46px] z-10 hidden h-6 w-6 items-center justify-center rounded-full bg-accent text-[12px] text-white shadow-md lg:flex">
+                    →
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+          {/* the return line: Learning feeds back into Monitoring */}
+          <div aria-hidden="true" className="relative mt-2 hidden h-[54px] lg:block">
+            <svg viewBox="0 0 1000 54" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
+              <path d="M875 0 V24 Q875 44 855 44 H145 Q125 44 125 24 V6" fill="none" stroke="#d6e7f0" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+              <path d="M875 0 V24 Q875 44 855 44 H145 Q125 44 125 24 V6" fill="none" stroke="#0077b6" strokeWidth="2.5" strokeDasharray="7 9" className="route-flow" vectorEffect="non-scaling-stroke" />
             </svg>
-            {cycle.map((c, i) => {
-              const a = (i / 4) * Math.PI * 2 - Math.PI / 2;
-              return (
-                <span
-                  key={c}
-                  className="meal-letter font-display absolute flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-navy text-[20px] text-white shadow-lg"
-                  style={{ left: `${50 + 39 * Math.cos(a)}%`, top: `${50 + 39 * Math.sin(a)}%`, animationDelay: `${i * 1.5}s` }}
-                >
-                  {c[0]}
-                </span>
-              );
-            })}
-            <span className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="font-display text-[30px] leading-none text-navy">MEAL</span>
-              <span className="mt-1 text-[10.5px] font-semibold uppercase tracking-[.12em] text-grey">system</span>
+            <span className="absolute left-[12.5%] top-0 -translate-x-1/2 -translate-y-1 text-[13px] leading-none text-accent">▲</span>
+            <span className="absolute left-1/2 top-[30px] -translate-x-1/2 bg-white px-3 text-[11.5px] font-bold uppercase tracking-[.14em] text-accent">
+              Continuous improvement
             </span>
           </div>
-          <div>
-            <h3 {...reveal(0)} className="text-[15px] font-bold text-navy">
-              Monitoring, Evaluation, Accountability and Learning
-            </h3>
-            <ul className="mt-3 flex flex-wrap gap-2" aria-hidden="true">
-              {cycle.map((c) => (
-                <li key={c} className="border border-accent/40 px-2.5 py-1 text-[12px] font-semibold text-accent">
-                  <strong>{c[0]}</strong>
-                  {c.slice(1)}
-                </li>
-              ))}
-            </ul>
-            <p {...reveal(1)} className="mt-4 text-[15px] leading-[1.75] text-ink">
-              {MEAL}
-            </p>
-          </div>
         </div>
+
+        <p {...reveal(1)} className="mt-6 max-w-[72ch] text-[15px] leading-[1.75] text-ink">
+          {MEAL}
+        </p>
 
         <div className="mt-16 border-t border-line pt-12">
           <h3 {...reveal(0)} className="text-[15px] font-bold text-navy">
