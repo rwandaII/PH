@@ -164,6 +164,14 @@ model SiteInfo {
   facebookUrl  String   @default("") @map("facebook_url") @db.VarChar(255)
   twitterUrl   String   @default("") @map("twitter_url") @db.VarChar(255)
   linkedinUrl  String   @default("") @map("linkedin_url") @db.VarChar(255)
+  /// The card on the home page beside the introduction (Dashboard → Home page card).
+  /// It shows when it has a title or text; the button shows when it has a link.
+  featureImage  String? @map("feature_image") @db.VarChar(255)
+  featureTitle  String  @default("") @map("feature_title") @db.VarChar(160)
+  featureText   String  @default(dbgenerated("('')")) @map("feature_text") @db.Text
+  featureButton String  @default("Read more") @map("feature_button") @db.VarChar(60)
+  /// A page of the site ("/partners") or a full address (https://...).
+  featureLink   String  @default("") @map("feature_link") @db.VarChar(500)
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("site_info")

@@ -76,6 +76,11 @@ export const FALLBACK_SITE: SiteInfo = {
   facebookUrl: "",
   twitterUrl: "",
   linkedinUrl: "",
+  featureImage: null,
+  featureTitle: "",
+  featureText: "",
+  featureButton: "Read more",
+  featureLink: "",
 };
 
 /** Pictures of the picture places (Dashboard → Pictures & sliders). */

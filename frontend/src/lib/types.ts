@@ -29,6 +29,13 @@ export interface SiteInfo {
   facebookUrl: string;
   twitterUrl: string;
   linkedinUrl: string;
+  /** The home page card beside the introduction (Dashboard → Home page card). */
+  featureImage: string | null;
+  featureTitle: string;
+  featureText: string;
+  featureButton: string;
+  /** A page of the site ("/partners") or a full address (https://...). */
+  featureLink: string;
 }
 
 export interface NewsSummary {

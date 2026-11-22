@@ -143,6 +143,35 @@ describe('site info', () => {
     const pub = await request(app).get('/api/public/site').expect(200);
     expect(pub.body).toMatchObject({ programName: 'Water For All', tagline: 'Safe water', mission: 'M' });
   });
+
+  it('saves the home page card without touching the other text, and checks its link', async () => {
+    await agent.put('/api/admin/site').send({ programName: 'PH', mission: 'Water for all' }).expect(200);
+    await agent
+      .put('/api/admin/site')
+      .send({ featureTitle: 'RATIONALE', featureText: 'Strengthen partnership', featureButton: 'Read more', featureLink: '/partners' })
+      .expect(200);
+    const pub = (await request(app).get('/api/public/site').expect(200)).body;
+    expect(pub).toMatchObject({ programName: 'PH', mission: 'Water for all', featureTitle: 'RATIONALE', featureLink: '/partners' });
+
+    await agent.put('/api/admin/site').send({ featureLink: 'https://example.org/page' }).expect(200);
+    for (const bad of ['partners', '//evil.example', 'javascript:alert(1)']) {
+      const res = await agent.put('/api/admin/site').send({ featureLink: bad });
+      expect(res.status).toBe(400);
+    }
+  });
+
+  it('saves and removes the home page card photo', async () => {
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    expect((await agent.put('/api/admin/site/feature-image')).status).toBe(400);
+    const saved = await agent.put('/api/admin/site/feature-image').attach('image', png, { filename: 'a.png', contentType: 'image/png' }).expect(200);
+    expect(saved.body.featureImage).toMatch(/^\/uploads\/.+\.png$/);
+    const removed = await agent.put('/api/admin/site/feature-image').field('removeImage', 'true').expect(200);
+    expect(removed.body.featureImage).toBeNull();
+    await request(app).put('/api/admin/site/feature-image').field('removeImage', 'true').expect(401);
+  });
 });
 
 describe('messages and stats', () => {

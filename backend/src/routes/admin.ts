@@ -7,7 +7,7 @@ import { optionalUrl } from '../lib/crud.js';
 import { kigaliDay, lastDays } from '../lib/analytics.js';
 import { HttpError } from '../lib/errors.js';
 import { refreshAfterChanges } from '../lib/revalidate.js';
-import { publicPath, removeUpload, videoUpload } from '../lib/upload.js';
+import { imageUpload, publicPath, removeUpload, videoUpload } from '../lib/upload.js';
 import { certificatesRouter, newsRouter, partnersRouter, projectsRouter, servicesRouter, siteImagesRouter, teamRouter } from './resources.js';
 
 export const adminRouter = Router();
@@ -108,6 +108,19 @@ const siteSchema = z.object({
   facebookUrl: optionalUrl,
   twitterUrl: optionalUrl,
   linkedinUrl: optionalUrl,
+  // Home page card (its photo is saved through PUT /site/feature-image).
+  featureTitle: text(160),
+  featureText: text(2000),
+  featureButton: text(60),
+  featureLink: z
+    .string()
+    .trim()
+    .max(500)
+    .refine(
+      (v) => v === '' || (/^\/(?!\/)\S*$/.test(v)) || /^https?:\/\/\S+$/i.test(v),
+      'Enter a page of the site such as /partners, or a full address starting with https://',
+    )
+    .default(''),
 });
 
 adminRouter.get('/site', async (_req, res) => {
@@ -115,10 +128,24 @@ adminRouter.get('/site', async (_req, res) => {
 });
 
 adminRouter.put('/site', async (req, res) => {
-  const data = siteSchema.parse(req.body ?? {});
+  // Only the fields sent change, so the About page and the Home page card can each save their own part.
+  const body: Record<string, unknown> = req.body && typeof req.body === 'object' ? req.body : {};
+  const parsed = siteSchema.partial().parse(body);
+  const data = Object.fromEntries(Object.entries(parsed).filter(([key]) => key in body));
   res.json(
     await prisma.siteInfo.upsert({ where: { id: 1 }, update: data, create: { id: 1, ...data } }),
   );
+});
+
+/** The home page card's photo: send an "image" file, or removeImage=true to take it away. */
+adminRouter.put('/site/feature-image', imageUpload, async (req, res) => {
+  const remove = req.body?.removeImage === 'true';
+  if (!req.file && !remove) throw new HttpError(400, 'Choose an image');
+  const before = await prisma.siteInfo.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
+  const featureImage = req.file ? publicPath(req.file.filename) : null;
+  const site = await prisma.siteInfo.update({ where: { id: 1 }, data: { featureImage } });
+  removeUpload(before.featureImage);
+  res.json(site);
 });
 
 /* ---------- Statistics: visitors, comments, messages and content ---------- */

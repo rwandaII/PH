@@ -3,6 +3,7 @@ import { shortName } from "@/components/site/partners/PartnerParts";
 import Link from "next/link";
 import { HeroSlider, type HeroSlide } from "@/components/site/HeroSlider";
 import { ArrowRight, Chevron, Facebook } from "@/components/site/icons";
+import { HomeCard, hasHomeCard } from "@/components/site/HomeCard";
 import { CountUp } from "@/components/site/Motion";
 import { ProjectsShowcase } from "@/components/site/ProjectsShowcase";
 import { ServicesSection } from "@/components/site/ServicesSection";
@@ -88,6 +89,9 @@ export default async function HomePage() {
   ];
 
   const intro = paragraphs(site.aboutText)[0] || site.heroText;
+  // The card beside the introduction (Dashboard → Home page card).
+  const card = { title: site.featureTitle, text: site.featureText, button: site.featureButton, link: site.featureLink };
+  const showCard = hasHomeCard(card);
 
   return (
     <>
@@ -96,8 +100,8 @@ export default async function HomePage() {
         programName={site.programName}
       />
 
-      {/* Red cube band: introduction with the big letter, plus the latest story */}
-      {(intro || lead) && (
+      {/* Red cube band: introduction with the big letter, plus the home page card */}
+      {(intro || showCard) && (
         <section
           id="about"
           className="relative overflow-hidden bg-[#023e7d] text-white [background-image:url(/patterns/cubes.svg)] [background-size:24.25px_42px]"
@@ -113,18 +117,12 @@ export default async function HomePage() {
                 </div>
               )}
             </div>
-            {lead && (
-              <div className="flex max-w-full flex-[0_0_342px] flex-col bg-[rgba(2,62,125,.88)] p-5" {...reveal(1, "right")}>
-                <Img src={imageOr(lead.coverImage)} alt="" sizes="320px" className="float-card block h-[222px] w-[157px] object-cover" />
-                <h2 className="mt-[22px] text-[18px] font-bold leading-[1.3]">{lead.title}</h2>
-                <p className="font-text mt-2.5 text-[15.5px] leading-[1.27]">
-                  {formatDate(lead.publishedAt)}
-                  {lead.excerpt && `. ${lead.excerpt}`}
-                </p>
-                <Link href={`/news/${lead.slug}`} className="btn-primary mt-[22px] flex min-h-[41px] items-center gap-4 px-[26px] text-[14px] font-semibold">
-                  <Chevron /> Read more
-                </Link>
-              </div>
+            {showCard && (
+              <HomeCard
+                card={card}
+                photo={site.featureImage && <Img src={site.featureImage} alt="" sizes="320px" className="float-card block h-[222px] w-[157px] object-cover" />}
+                {...reveal(1, "right")}
+              />
             )}
             <div aria-hidden="true" className="flex-1" />
           </div>

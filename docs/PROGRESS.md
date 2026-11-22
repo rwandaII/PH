@@ -407,3 +407,11 @@ Design prototype (canvas): https://claude.ai/artifact/2qEneXKDGJ48QzAt7GwTc9
     Both sections are dark with transparent "glass" cards (.glass-card). Fixes: sections use overflow-clip (overflow
     hidden broke the sticky map, leaving empty space); the map's root has data-no-reveal because re-renders wiped the
     scroll-reveal class and the cards stayed invisible.
+- Home page card (2026-11-22): the card beside the home introduction no longer shows the latest news story. It has
+  its own photo, title, text, button words and button link in site_info (feature_* columns, migration
+  20261122090000_home_feature_card), edited in Dashboard → Home page card (form in the card's order + live preview
+  drawn by the same component, components/site/HomeCard.tsx). Photo: PUT /api/admin/site/feature-image. PUT
+  /api/admin/site now changes only the fields sent, so the About page and the card page don't wipe each other.
+  Filled with the words it had before (the youth promotion story, button → the story; "RATIONALE" was tried and
+  reverted at the user's request) by
+  `npx tsx prisma/content/2026-11-22-home-card.ts` (safe to re-run). Backend tests: 54.
